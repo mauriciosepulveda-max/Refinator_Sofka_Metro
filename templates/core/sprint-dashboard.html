@@ -491,11 +491,8 @@ main{flex:1;padding:var(--space-6);max-width:var(--max-w);margin:0 auto;width:10
     <div class="tab-dropdown" id="tab-reports-wrap">
       <button class="tab" id="tab-reports" aria-haspopup="true" aria-expanded="false">📥 Respaldo ▾</button>
       <div class="tab-menu" role="menu">
-        <button data-report="export-md">⬇ Exportar Feedback + EVM (Markdown)</button>
-        <button data-report="import-md">⬆ Importar Feedback + EVM (Markdown)</button>
-        <div class="menu-sep"></div>
-        <button data-report="export-json">⬇ Exportar Estado (JSON)</button>
-        <button data-report="pdf">📑 Imprimir / Exportar PDF</button>
+        <button data-report="export-md">⬇ Exportar respaldo (Markdown)</button>
+        <button data-report="import-md">⬆ Importar respaldo (Markdown)</button>
       </div>
     </div>
   </nav>
@@ -824,7 +821,6 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     </div>
     <div class="hu-modal-body" id="hu-modal-body"><!-- populated by JS --></div>
     <div class="hu-modal-footer" id="hu-modal-footer">
-      <button class="btn btn-ghost" id="btn-save">💾 Guardar cambios</button>
       <button class="btn btn-reject" id="btn-reject">✗ Rechazar / Iterar</button>
       <button class="btn btn-approve" id="btn-approve">✓ Aprobar HU</button>
     </div>
@@ -1419,7 +1415,6 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     });
 
     // Footer buttons
-    document.getElementById('btn-save').onclick=()=>flash('Cambios guardados');
     document.getElementById('btn-approve').onclick=()=>{
       updateHu(huId,{status:'aprobada'});
       flash('HU aprobada ✓');
@@ -2342,7 +2337,7 @@ indica "No documentado — requiere confirmación del equipo".</pre>
 
   // ── Markdown export/import ─────────────────────────────
   function buildStatePayload(){
-    return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm()};
+    return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm(),unit:loadUnit(),dates:loadDates(),bac_custom_h:loadCustomBacH()};
   }
   function parseStatePayload(mdText){
     const re=/<!--\s*RR-STATE-BEGIN\s*-->[\s\S]*?```json\s*([\s\S]*?)\s*```[\s\S]*?<!--\s*RR-STATE-END\s*-->/;
@@ -2355,6 +2350,9 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     if(payload.sprint_id&&payload.sprint_id!==SPRINT_ID){if(!confirm('El archivo pertenece a '+payload.sprint_id+' pero estás en '+SPRINT_ID+'. ¿Importar?'))return{ok:false};}
     if(payload.hitl)localStorage.setItem(LS_KEY,JSON.stringify(payload.hitl));
     if(payload.evm)localStorage.setItem(EVM_KEY,JSON.stringify(payload.evm));
+    if(payload.unit)localStorage.setItem(UNIT_KEY,payload.unit);
+    if(payload.dates)localStorage.setItem(DATES_KEY,JSON.stringify(payload.dates));
+    if(payload.bac_custom_h!=null)localStorage.setItem(BAC_KEY,String(payload.bac_custom_h));
     return{ok:true};
   }
   function handleImportFile(file,rerender){

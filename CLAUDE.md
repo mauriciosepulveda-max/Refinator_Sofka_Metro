@@ -14,7 +14,7 @@ Un sistema de agentes analiza las HUs del sprint, genera CAs en Gherkin, tareas 
 1. **Contexto se lee UNA VEZ** -- El orquestador lee todos los archivos y pasa el contenido como texto a los agentes. Los agentes nunca leen archivos.
 2. **1 agente por HU** -- `hu-full-analyzer` ejecuta los 5 analisis (INVEST, ISO 29148, ISO 25010, Gherkin, Tareas, Riesgos, Dependencias) en una sola invocacion. No 5 agentes separados.
 3. **Agentes producen DATA, no presentacion** -- Los agentes devuelven JSON puro conforme a `hu-calidad.schema.json`. Nunca HTML ni CSS.
-4. **1 template HTML fijo** -- `templates/sprint-dashboard.html` es un archivo HTML estatico con CSS y JS incluidos. Renderiza todo desde `window.__SPRINT_DATA__`.
+4. **1 template HTML fijo** -- `templates/core/sprint-dashboard.html` es un archivo HTML estatico con CSS y JS incluidos. Renderiza todo desde `window.__SPRINT_DATA__`.
 5. **Sin artefactos intermedios** -- No hay `parciales/*.json`, no hay `<hu-id>.html` individuales, no hay `style.css` ni `script.js` separados. Solo `data.json` + `index.html`.
 6. **Eficiencia de invocaciones** -- 1 invocacion por HU + 0-1 reintentos por quality gates.
 
@@ -93,8 +93,8 @@ Re-analiza SOLO las HUs rechazadas o con feedback (lee el `.md` exportado desde 
   docs/HUs/Sprint-X/*.md
   docs/contexto/contexto-funcional.md
   docs/contexto/contexto-tecnico.md
-  templates/hu-calidad.schema.json
-  templates/sprint-dashboard.html
+  templates/core/hu-calidad.schema.json
+  templates/core/sprint-dashboard.html
   Construir contexto_condensado
 
 [FASE 1 -- ANALISIS EN PARALELO (1 agente por HU)]
@@ -114,7 +114,7 @@ Re-analiza SOLO las HUs rechazadas o con feedback (lee el `.md` exportado desde 
   Reunir JSONs -> calcular metricas_sprint -> escribir data.json
 
 [FASE 4 -- GENERACION HTML (inyeccion en template)]
-  Leer templates/sprint-dashboard.html
+  Leer templates/core/sprint-dashboard.html
   Reemplazar /*__SPRINT_DATA__*/ con JSON de data.json
   Escribir output/Sprint-X/index.html
 
@@ -142,42 +142,61 @@ Agentes legacy preservados pero no usados en el flujo principal:
 ## Estructura de archivos
 
 ```
-Requirement Refinator V1/
-├── CLAUDE.md                          <- Este archivo (workflow master)
+Requirement Refinator V3/
+├── CLAUDE.md                              <- Este archivo (workflow master)
+├── README.md
+├── .gitignore
 ├── .claude/
 │   ├── agents/
-│   │   ├── orchestrator.md            <- Coordinacion (lee, lanza, consolida)
-│   │   ├── hu-full-analyzer.md        <- Analisis completo 1 HU -> JSON
-│   │   ├── report-builder.md          <- Inyecta data en template HTML
-│   │   ├── client-report-generator.md <- Informe al cliente
-│   │   ├── spec-writer.md             <- Specs SDD
-│   │   └── [legacy agents]            <- hu-analyzer, gherkin-writer, etc.
-│   └── skills/
-│       ├── refinar-hu/SKILL.md        <- /refinar-hu
-│       ├── refinar-sprint/SKILL.md    <- /refinar-sprint
-│       ├── iterar-refinamiento/SKILL.md
-│       ├── generar-informe/SKILL.md
-│       └── generar-specs/SKILL.md
+│   │   ├── _project/                      <- Agentes PROPIOS del Requirement Refinator
+│   │   │   ├── orchestrator.md            <- Coordinacion (lee, lanza, consolida)
+│   │   │   ├── hu-full-analyzer.md        <- Analisis completo 1 HU -> JSON
+│   │   │   ├── report-builder.md          <- Inyecta data en template HTML
+│   │   │   ├── client-report-generator.md <- Informe al cliente
+│   │   │   ├── spec-writer.md             <- Specs SDD
+│   │   │   └── _legacy/                   <- Reemplazados, no usados en flujo principal
+│   │   │       └── hu-analyzer.md, gherkin-writer.md, etc.
+│   │   └── _kit-base/                     <- 101 agentes del JM Kit (READ-ONLY)
+│   ├── rules/
+│   │   ├── _project/                      <- Reglas propias del Requirement Refinator
+│   │   └── _kit-base/                     <- R-001 a R-008 + GEMINI.md (READ-ONLY)
+│   ├── skills/
+│   │   ├── _project/                      <- Skills propios del proyecto
+│   │   │   ├── refinar-sprint/SKILL.md
+│   │   │   ├── refinar-hu/SKILL.md
+│   │   │   ├── iterar-refinamiento/SKILL.md
+│   │   │   ├── generar-informe/SKILL.md
+│   │   │   └── generar-specs/SKILL.md
+│   │   └── _kit-base/                     <- 110 skills genericos (READ-ONLY)
+│   └── workflows/
+│       └── _kit-base/                     <- 101 workflows genericos (READ-ONLY)
 ├── docs/
 │   ├── HUs/
-│   │   └── Sprint-1/                  <- HUs del Sprint (agregar aqui)
+│   │   └── Sprint-X/                      <- HUs del Sprint (el PM crea esta carpeta)
 │   ├── contexto/
-│   │   ├── contexto-funcional.md      <- Contexto de negocio
-│   │   └── contexto-tecnico.md        <- Stack, arquitectura
-│   └── ux_design_playbook_sofka.md    <- Sistema de diseno (fuente de verdad)
+│   │   ├── contexto-funcional.template.md <- Plantilla de contexto de negocio
+│   │   └── contexto-tecnico.template.md   <- Plantilla de stack y arquitectura
+│   └── referencia/                        <- Documentacion de normas y guias
+│       ├── TUTORIAL.md
+│       ├── ui-design-guidelines.md
+│       └── ISO_IEC_25010_Calidad.md, etc.
 ├── output/
-│   └── Sprint-X/                      <- Generado automaticamente
-│       ├── index.html                 <- Dashboard UNICO (todo incluido)
-│       └── data.json                  <- Datos del sprint (JSON)
-├── specs/
-│   └── Sprint-X/                      <- Specs SDD
+│   └── Sprint-X/                          <- Generado automaticamente
+│       ├── index.html                     <- Dashboard UNICO (todo incluido)
+│       └── data.json                      <- Datos del sprint (JSON)
+├── scripts/                               <- Utilitarios Node.js (no son el flujo principal)
+│   ├── approve_specs.js
+│   ├── generador_informes.js
+│   ├── generador_specs.js
+│   └── inyectar_feedback.js
 └── templates/
-    ├── sprint-dashboard.html          <- Template HTML fijo (CSS+JS incluidos)
-    ├── hu-calidad.schema.json         <- Contrato de output JSON
-    ├── refined_user_story_template.md
-    ├── risk_dependency_template.md
-    ├── technical_task_template.md
-    └── spec-sdd-template.md
+    ├── core/                              <- CRITICOS — el orquestador los lee
+    │   ├── sprint-dashboard.html          <- Template HTML fijo (CSS+JS incluidos)
+    │   └── hu-calidad.schema.json         <- Contrato de output JSON
+    └── auxiliary/                         <- Templates de referencia (poco usados)
+        ├── refined_user_story_template.md
+        ├── risk_dependency_template.md
+        └── spec-sdd-template.md
 ```
 
 ---
@@ -260,4 +279,4 @@ El template HTML usa el sistema de diseño definido en `docs/ui-design-guideline
 - **Fuentes:** Clash Grotesk (headings) + Inter (body) + JetBrains Mono (código)
 - **Semánticos (RAG):** Verde `#16A34A` / Ámbar `#D97706` / Rojo `#DC2626`
 
-Todo esto está definido UNA SOLA VEZ en `templates/sprint-dashboard.html`. Los agentes nunca generan CSS.
+Todo esto está definido UNA SOLA VEZ en `templates/core/sprint-dashboard.html`. Los agentes nunca generan CSS.
