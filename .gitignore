@@ -1,0 +1,23 @@
+# ── Outputs generados (no se versiona el contenido de cliente) ──
+output/*/index.html
+output/*/data.json
+
+# ── Contexto real de proyectos (cada PM pone el suyo) ──
+docs/contexto/*.md
+!docs/contexto/README.md
+
+# ── HUs reales de proyectos ──
+docs/HUs/*/
+!docs/HUs/README.md
+
+# ── Sistema operativo ──
+.DS_Store
+Thumbs.db
+
+# ── IDEs ──
+.vscode/
+.idea/
+*.swp
+
+# ── Node ──
+node_modules/

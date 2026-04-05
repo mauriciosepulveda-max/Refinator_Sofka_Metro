@@ -1,0 +1,2476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Requirement Refinator — Sprint Dashboard</title>
+<link rel="preconnect" href="https://api.fontshare.com">
+<link href="https://api.fontshare.com/v2/css?f[]=clash-grotesk@400,500,600,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<style>
+/* ================================================================
+   REQUIREMENT REFINATOR — Dark Theme v4.0
+   Single-HTML: Dashboard + Avance del Sprint
+   ================================================================ */
+:root {
+  --rr-orange: #FF7E08;
+  --rr-orange-hover: #E06A00;
+  --rr-orange-light: rgba(255,126,8,0.12);
+  --rr-orange-border: rgba(255,126,8,0.28);
+  --rr-black: #000000;
+  --rr-white: #FFFFFF;
+
+  /* Dark theme surfaces */
+  --color-bg:       #0C0C0F;
+  --color-surface:  #141417;
+  --color-surface-2:#1C1C22;
+  --color-surface-3:#242430;
+  --color-border:   #272730;
+  --color-border-2: #323240;
+  --color-text:     #E8E6E3;
+  --color-text-muted:#8A8785;
+  --color-text-faint:#484540;
+
+  /* Semantic RAG */
+  --rag-green: #16A34A; --rag-green-bg: rgba(22,163,74,.15); --rag-green-border: rgba(22,163,74,.35);
+  --rag-amber: #D97706; --rag-amber-bg: rgba(217,119,6,.15);  --rag-amber-border: rgba(217,119,6,.35);
+  --rag-red:   #DC2626; --rag-red-bg:   rgba(220,38,38,.15);  --rag-red-border:   rgba(220,38,38,.35);
+
+  --font-display: 'Clash Grotesk','Inter',system-ui,sans-serif;
+  --font-body:    'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:    'JetBrains Mono','Fira Code',monospace;
+
+  --max-w: 1280px;
+  --radius-sm:.375rem; --radius-md:.75rem; --radius-lg:1rem; --radius-xl:1.25rem; --radius-full:9999px;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.3);
+  --shadow-sm:0 1px 4px rgba(0,0,0,.4),0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:0 4px 12px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.3);
+  --shadow-lg:0 10px 30px rgba(0,0,0,.6),0 4px 8px rgba(0,0,0,.4);
+  --space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;
+  --space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--space-10:2.5rem;--space-12:3rem;
+  --t-fast:150ms ease;--t-normal:220ms ease;--t-slow:350ms ease;
+  --z-sticky:70; --z-banner:60; --z-panel:90; --z-modal:100; --z-tooltip:9999;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);line-height:1.6;font-size:16px;min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3,h4,h5{font-family:var(--font-display);font-weight:700;line-height:1.25;color:var(--color-text)}
+button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+a{color:var(--rr-orange);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--rr-orange);outline-offset:2px;border-radius:4px}
+.skip-link{position:absolute;left:-9999px}
+.skip-link:focus{left:1rem;top:1rem;z-index:200;background:var(--rr-orange);color:#fff;padding:.5rem 1rem;border-radius:6px}
+
+/* ── HEADER ──────────────────────────────────────── */
+.header{
+  background:linear-gradient(135deg,#000 0%,#0C0C10 60%,#141418 100%);
+  padding:0 var(--space-8);height:64px;
+  display:flex;align-items:center;gap:var(--space-5);
+  position:sticky;top:0;z-index:var(--z-sticky);
+  border-bottom:1px solid rgba(255,126,8,.2);
+  box-shadow:0 2px 20px rgba(0,0,0,.5);
+}
+.logo{width:38px;height:38px;background:var(--rr-orange);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand-title{color:#fff;font-family:var(--font-display);font-weight:700;font-size:1rem;letter-spacing:.2px}
+.brand-sub{color:rgba(255,255,255,.4);font-size:.68rem;letter-spacing:.6px;text-transform:uppercase}
+
+/* Tabs */
+.tabs{display:flex;gap:.1rem;margin-left:auto;align-items:center;height:100%}
+.tab{
+  background:transparent;border:none;color:rgba(255,255,255,.55);
+  padding:0 var(--space-4);height:100%;display:flex;align-items:center;gap:.35rem;
+  font-family:var(--font-display);font-weight:600;font-size:.84rem;cursor:pointer;
+  border-bottom:3px solid transparent;transition:var(--t-normal);
+}
+.tab:hover:not(:disabled){color:#fff;background:rgba(255,255,255,.05)}
+.tab.active{color:#fff;border-bottom-color:var(--rr-orange)}
+.tab:disabled{color:rgba(255,255,255,.22);cursor:not-allowed}
+.tab-dropdown{position:relative;height:100%}
+.tab-menu{
+  position:absolute;top:100%;right:0;background:#181820;min-width:260px;
+  border-radius:0 0 10px 10px;box-shadow:var(--shadow-lg);
+  padding:.5rem 0;display:none;border:1px solid var(--color-border);border-top:none;
+}
+.tab-dropdown.open .tab-menu{display:block}
+.tab-menu button{display:flex;align-items:center;gap:.6rem;width:100%;background:none;border:none;color:rgba(255,255,255,.8);padding:.7rem 1rem;text-align:left;cursor:pointer;font-size:.84rem}
+.tab-menu button:hover{background:rgba(255,126,8,.12);color:#fff}
+.tab-menu .menu-sep{height:1px;background:var(--color-border);margin:.3rem 0}
+
+/* ── BACKUP BANNER ─────────────────────────────────── */
+.backup-banner{
+  background:linear-gradient(90deg,rgba(255,126,8,.18),rgba(255,154,0,.12));
+  border-bottom:1px solid var(--rr-orange-border);color:rgba(255,200,100,.9);
+  position:sticky;top:64px;z-index:var(--z-banner);
+  padding:.65rem var(--space-6);display:none;align-items:center;gap:var(--space-4);font-size:.84rem;
+}
+.backup-banner.visible{display:flex}
+.backup-banner .bb-text{flex:1}
+.backup-banner .bb-text strong{color:#FFCC66;font-family:var(--font-display);display:block}
+.backup-banner .bb-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+main{flex:1;padding:var(--space-6);max-width:var(--max-w);margin:0 auto;width:100%}
+.view{display:none}
+.view.active{display:block;animation:fadeIn .22s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-header{margin-bottom:var(--space-5)}
+.page-title{font-size:1.9rem;font-weight:700;letter-spacing:-.5px}
+.page-sub{color:var(--color-text-muted);margin-top:.2rem;font-size:.92rem}
+
+/* ── CARDS ──────────────────────────────────────────── */
+.card{
+  background:var(--color-surface);border-radius:var(--radius-lg);
+  border:1px solid var(--color-border);margin-bottom:var(--space-5);
+  padding:var(--space-6);
+}
+.card h2{font-size:1.1rem;margin-bottom:var(--space-4);display:flex;align-items:center;gap:.5rem;color:var(--color-text)}
+.card h3{font-size:.95rem;font-weight:600;margin-bottom:var(--space-3);color:var(--color-text)}
+
+/* ── HERO (Dashboard cover) ─────────────────────────── */
+.hero{
+  background:linear-gradient(145deg,#000 0%,#0A0A10 50%,#100C14 100%);
+  border-radius:var(--radius-xl);
+  border:1px solid rgba(255,126,8,.22);
+  padding:var(--space-8) var(--space-8) var(--space-6);
+  margin-bottom:var(--space-6);
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:"";position:absolute;top:-80px;right:-80px;width:320px;height:320px;
+  background:radial-gradient(circle,rgba(255,126,8,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-header{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-4);flex-wrap:wrap;margin-bottom:var(--space-6)}
+.hero-title{font-size:2.2rem;font-weight:700;color:#fff;letter-spacing:-.8px;line-height:1.15}
+.hero-title span{color:var(--rr-orange)}
+.hero-sub{color:rgba(255,255,255,.45);font-size:.88rem;margin-top:.3rem}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .9rem;
+  background:rgba(255,126,8,.15);border:1px solid rgba(255,126,8,.35);
+  border-radius:var(--radius-full);font-size:.72rem;font-weight:700;
+  color:var(--rr-orange);letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;
+}
+
+/* Hero KPI grid */
+.hero-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3)}
+.hkpi{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--radius-lg);padding:var(--space-4) var(--space-4);
+  cursor:pointer;transition:var(--t-normal);position:relative;overflow:hidden;
+}
+.hkpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rr-orange);border-radius:3px 0 0 3px;transition:var(--t-normal)}
+.hkpi:hover{background:rgba(255,126,8,.1);border-color:rgba(255,126,8,.3);transform:translateY(-1px)}
+.hkpi.hkpi-green::before{background:var(--rag-green)}
+.hkpi.hkpi-amber::before{background:var(--rag-amber)}
+.hkpi.hkpi-red::before{background:var(--rag-red)}
+.hkpi-label{font-size:.62rem;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:.3rem}
+.hkpi-value{font-family:var(--font-display);font-weight:700;font-size:1.75rem;line-height:1.05;margin-top:.25rem;color:#fff}
+.hkpi-hint{font-size:.68rem;color:rgba(255,255,255,.3);margin-top:.2rem}
+
+/* Sprint diagnostic gauges */
+.diag-gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--space-4);margin-bottom:var(--space-5)}
+.gauge{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5)}
+.gauge-label{font-size:.68rem;font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.5px}
+.gauge-value{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-top:.15rem;color:var(--color-text)}
+.gauge-bar{margin-top:.5rem;background:var(--color-surface-2);border-radius:var(--radius-full);height:7px;overflow:hidden}
+.gauge-fill{height:100%;background:linear-gradient(90deg,var(--rr-orange),#FF9A00);border-radius:var(--radius-full);transition:width .6s ease}
+
+/* Sprint summary (before HU table) */
+.sprint-summary{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5) var(--space-6);margin-bottom:var(--space-5)}
+.sprint-summary h3{font-size:.78rem;color:var(--rr-orange);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:var(--space-3)}
+.diag-dist{display:flex;gap:var(--space-3);flex-wrap:wrap;align-items:center}
+.diag-level{display:flex;align-items:center;gap:.4rem;font-size:.82rem;padding:.35rem .8rem;border-radius:var(--radius-full);background:var(--color-surface-2);border:1px solid var(--color-border)}
+.diag-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.diag-count{font-weight:700;font-family:var(--font-display)}
+
+/* ── KPI (progress view) ─────────────────────────────── */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:var(--space-4);margin-bottom:var(--space-5)}
+.kpi{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);position:relative;overflow:hidden}
+.kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rr-orange)}
+.kpi-label{font-size:.64rem;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--color-text-muted);display:flex;align-items:center;gap:.3rem}
+.kpi-value{font-family:var(--font-display);font-weight:700;font-size:1.7rem;line-height:1.1;margin-top:.25rem;color:var(--color-text)}
+.kpi-hint{font-size:.7rem;color:var(--color-text-faint);margin-top:.2rem}
+.kpi.kpi-green::before{background:var(--rag-green)}
+.kpi.kpi-amber::before{background:var(--rag-amber)}
+.kpi.kpi-red::before{background:var(--rag-red)}
+
+/* ── TABLES ─────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;font-size:.84rem}
+.tbl th{background:var(--color-surface-2);padding:9px 12px;font-weight:700;border-bottom:2px solid var(--color-border-2);font-size:.64rem;text-transform:uppercase;letter-spacing:.4px;color:var(--color-text-muted);text-align:left}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--color-border);vertical-align:middle}
+.tbl tr:hover td{background:var(--color-surface-2)}
+.tbl .hu-title{font-weight:600;color:var(--color-text)}
+.tbl .hu-id{font-family:var(--font-mono);font-size:.7rem;color:var(--color-text-muted)}
+.tbl tfoot td{font-weight:700;background:var(--color-surface-2);border-top:2px solid var(--color-border-2);font-family:var(--font-mono);font-size:.8rem}
+
+/* EVM table */
+.evm-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.evm-table th{background:var(--color-surface-2);padding:7px 5px;font-weight:700;border-bottom:2px solid var(--color-border-2);font-size:.62rem;text-transform:uppercase;letter-spacing:.3px;color:var(--color-text-muted);text-align:center;white-space:nowrap}
+.evm-table td{padding:5px 5px;border-bottom:1px solid var(--color-border);text-align:center;font-family:var(--font-mono);font-size:.74rem}
+.evm-table td:first-child{text-align:left;font-family:var(--font-body);white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.evm-input{width:64px;padding:3px 4px;border:1px solid var(--color-border);border-radius:4px;font-family:var(--font-mono);font-size:.7rem;text-align:center;background:var(--color-surface-2);color:var(--color-text)}
+.evm-input:focus{outline:2px solid var(--rr-orange);outline-offset:1px;border-color:var(--rr-orange)}
+
+/* ── BADGES ─────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font:700 .64rem var(--font-body);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.badge-green{background:var(--rag-green-bg);color:var(--rag-green);border:1px solid var(--rag-green-border)}
+.badge-amber{background:var(--rag-amber-bg);color:var(--rag-amber);border:1px solid var(--rag-amber-border)}
+.badge-red{background:var(--rag-red-bg);color:var(--rag-red);border:1px solid var(--rag-red-border)}
+.badge-orange{background:var(--rr-orange-light);color:var(--rr-orange);border:1px solid var(--rr-orange-border)}
+.badge-gray{background:var(--color-surface-2);color:var(--color-text-muted);border:1px solid var(--color-border)}
+
+/* ── BUTTONS ─────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.5rem .95rem;border-radius:var(--radius-md);border:1px solid transparent;font-family:var(--font-body);font-weight:600;font-size:.82rem;cursor:pointer;transition:var(--t-normal);text-decoration:none;line-height:1}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.btn-primary{background:linear-gradient(135deg,#FF7E08,#FF9A00);color:#fff;border:none}
+.btn-primary:hover{background:linear-gradient(135deg,#E06A00,#FF7E08)}
+.btn-approve{background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;border:none}
+.btn-reject{background:linear-gradient(135deg,#DC2626,#EF4444);color:#fff;border:none}
+.btn-secondary{background:var(--color-surface-2);color:var(--color-text);border-color:var(--color-border)}
+.btn-secondary:hover{background:var(--color-border)}
+.btn-ghost{background:transparent;color:var(--color-text-muted);border:1px solid var(--color-border)}
+.btn-ghost:hover{background:var(--color-surface-2);color:var(--color-text)}
+.btn-sm{padding:.3rem .65rem;font-size:.72rem;border-radius:var(--radius-sm)}
+.btn-lg{padding:.75rem 1.5rem;font-size:.92rem}
+
+/* ── CALLOUTS ────────────────────────────────────────── */
+.callout{padding:var(--space-4) var(--space-5);border-radius:var(--radius-md);border-left:3px solid;margin-bottom:var(--space-4)}
+.callout h3{font-size:.95rem;margin-bottom:.3rem}
+.callout p{font-size:.86rem;color:var(--color-text-muted)}
+.callout-amber{background:var(--rag-amber-bg);border-color:var(--rag-amber)}
+.callout-red{background:var(--rag-red-bg);border-color:var(--rag-red)}
+.callout-green{background:var(--rag-green-bg);border-color:var(--rag-green)}
+.callout-orange{background:var(--rr-orange-light);border-color:var(--rr-orange)}
+
+/* ── PANELS (collapsible) ───────────────────────────── */
+.panel{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);margin-bottom:var(--space-3);overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:var(--space-4) var(--space-5);cursor:pointer;background:var(--color-surface-2);border-bottom:1px solid var(--color-border);transition:var(--t-fast)}
+.panel-head:hover{background:var(--color-surface-3)}
+.panel-head h3{margin:0;font-size:.95rem;color:var(--color-text)}
+.panel-toggle{color:var(--color-text-muted);font-size:1rem;transition:transform var(--t-normal)}
+.panel.collapsed .panel-toggle{transform:rotate(-90deg)}
+.panel-body{padding:var(--space-5)}
+.panel.collapsed .panel-body{display:none}
+
+/* ── GHERKIN ─────────────────────────────────────────── */
+.gherkin{background:#0A0E1A;color:#CBD5E1;font-family:var(--font-mono);font-size:.78rem;padding:var(--space-4);border-radius:var(--radius-md);white-space:pre-wrap;line-height:1.6;margin-top:.4rem;border:1px solid #1E2640}
+.gherkin .kw{color:#FF9A00;font-weight:700}
+.scenario{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-3);background:var(--color-surface-2)}
+.scenario-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap;margin-bottom:.3rem}
+.scenario-title{font-weight:600;font-size:.9rem}
+.scenario-meta{font-size:.7rem;color:var(--color-text-muted)}
+
+/* ── PERT inputs ─────────────────────────────────────── */
+.pert-input{width:54px;padding:4px 5px;border:1px solid var(--color-border);border-radius:5px;font-family:var(--font-mono);font-size:.78rem;text-align:center;background:var(--color-surface-2);color:var(--color-text)}
+.pert-input:focus{outline:2px solid var(--rr-orange);outline-offset:1px;border-color:var(--rr-orange)}
+.pert-e{font-family:var(--font-mono);font-weight:700;color:var(--rr-orange)}
+
+/* ── Estimation pills ────────────────────────────────── */
+.est-bar{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;margin:.3rem 0}
+.est-pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:var(--radius-full);font-family:var(--font-mono);font-size:.68rem;font-weight:700;border:1px solid;white-space:nowrap}
+.est-pill-DEV{background:rgba(29,78,216,.2);color:#93C5FD;border-color:rgba(29,78,216,.4)}
+.est-pill-FE{background:rgba(146,64,14,.2);color:#FCD34D;border-color:rgba(146,64,14,.4)}
+.est-pill-QA{background:rgba(22,101,52,.2);color:#86EFAC;border-color:rgba(22,101,52,.4)}
+.est-pill-DB{background:rgba(107,33,168,.2);color:#D8B4FE;border-color:rgba(107,33,168,.4)}
+.est-pill-DEVOPS{background:rgba(153,27,27,.2);color:#FCA5A5;border-color:rgba(153,27,27,.4)}
+.est-pill-UX{background:rgba(157,23,77,.2);color:#FBCFE8;border-color:rgba(157,23,77,.4)}
+.est-total{font-family:var(--font-display);font-weight:700;color:var(--rr-orange);font-size:.86rem;white-space:nowrap}
+/* ── Collapsible estimation ── */
+.est-collapse{display:inline-flex;flex-direction:column;gap:.3rem}
+.est-collapse-header{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.est-toggle-btn{background:none;border:1px solid var(--rr-orange-border);color:var(--rr-orange);border-radius:var(--radius-full);padding:1px 8px;font-size:.7rem;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:var(--t-fast);white-space:nowrap}
+.est-toggle-btn:hover{background:var(--rr-orange-light)}
+.est-collapse-body{display:none;flex-wrap:wrap;gap:.35rem;margin-top:.1rem}
+.est-collapse.open .est-collapse-body{display:flex}
+.est-sprint-hint{font-size:.76rem;color:var(--color-text-muted);margin-top:.4rem;display:none}
+.est-collapse.open .est-sprint-hint{display:block}
+.est-dist-card{background:var(--rr-orange-light);border:1px solid var(--rr-orange-border);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5);margin-bottom:var(--space-4)}
+.est-dist-card h3{font-size:.74rem;color:rgba(255,126,8,.9);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:var(--space-2)}
+
+/* ── RISICAR ─────────────────────────────────────────── */
+.risicar-card{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4);margin-bottom:var(--space-3);background:var(--color-surface-2);transition:opacity .2s}
+.risicar-card.cerrado{opacity:.45}
+.risicar-head{display:flex;align-items:flex-start;gap:.5rem;flex-wrap:wrap;margin-bottom:.5rem}
+.risicar-tipologia{font-size:.64rem;font-weight:700;padding:2px 7px;border-radius:var(--radius-full);background:var(--rr-orange-light);color:var(--rr-orange);border:1px solid var(--rr-orange-border);white-space:nowrap;text-transform:uppercase;letter-spacing:.3px}
+.risicar-desc{flex:1;font-weight:600;font-size:.9rem;min-width:180px}
+.risicar-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.3rem .8rem;font-size:.8rem;color:var(--color-text-muted);margin-bottom:.5rem}
+.risicar-details strong{color:var(--color-text);font-weight:600}
+.risicar-metrics{display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap;padding:var(--space-3);background:var(--color-surface);border-radius:var(--radius-sm);margin-top:.3rem;border:1px solid var(--color-border)}
+.risicar-metrics label{font-size:.76rem;font-weight:600;color:var(--color-text-muted)}
+.risk-select{padding:3px 5px;border:1px solid var(--color-border);border-radius:4px;font-size:.76rem;background:var(--color-surface-2);color:var(--color-text);cursor:pointer}
+.rm-cerrado td{opacity:.4;}
+.risk-select:focus{outline:2px solid var(--rr-orange);outline-offset:1px}
+.nivel-chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:var(--radius-full);font-family:var(--font-display);font-size:.76rem;font-weight:700;white-space:nowrap}
+.nivel-tolerable{background:var(--rag-green-bg);color:var(--rag-green);border:1px solid var(--rag-green-border)}
+.nivel-grave{background:var(--rag-amber-bg);color:var(--rag-amber);border:1px solid var(--rag-amber-border)}
+.nivel-critico{background:var(--rag-red-bg);color:var(--rag-red);border:1px solid var(--rag-red-border)}
+.nivel-inaceptable{background:#DC2626;color:#fff;border:1px solid #991B1B}
+.risk-switch-wrap{display:flex;align-items:center;gap:.4rem;margin-left:auto;flex-shrink:0}
+.risk-toggle{appearance:none;-webkit-appearance:none;width:34px;height:18px;border-radius:9px;background:var(--color-border-2);cursor:pointer;position:relative;transition:background .2s;border:none;flex-shrink:0}
+.risk-toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.risk-toggle:checked{background:var(--rag-green)}
+.risk-toggle:checked::after{transform:translateX(16px)}
+
+/* ── Sub-tabs (per-page navigation) ─────────────────── */
+.sub-tabs{display:flex;gap:.25rem;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:.3rem;margin-bottom:var(--space-5);width:fit-content;flex-wrap:wrap}
+.sub-tab{background:transparent;border:none;color:var(--color-text-muted);padding:.5rem 1.1rem;border-radius:var(--radius-md);font-family:var(--font-display);font-weight:600;font-size:.8rem;cursor:pointer;transition:var(--t-fast);white-space:nowrap}
+.sub-tab:hover{color:var(--color-text);background:var(--color-surface-3)}
+.sub-tab.active{background:var(--rr-orange);color:#fff;box-shadow:0 2px 8px rgba(255,126,8,.35)}
+.sub-panel{display:none}
+.sub-panel.active{display:block;animation:fadeIn .18s ease}
+
+/* ── EVM Sprint date bar ─────────────────────────────── */
+.sprint-dates-bar{display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end;padding:var(--space-3);background:var(--rr-orange-light);border:1px solid var(--rr-orange-border);border-radius:var(--radius-md);margin-bottom:var(--space-3)}
+.date-field{display:flex;flex-direction:column;gap:.25rem;min-width:170px}
+.date-field label{font-size:.7rem;font-weight:700;color:rgba(255,126,8,.9);text-transform:uppercase;letter-spacing:.3px}
+.date-field input[type="date"]{font-family:var(--font-body);font-size:.86rem;padding:.45rem .6rem;border:1px solid var(--rr-orange-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-text)}
+.date-field input[type="date"]:focus{outline:2px solid var(--rr-orange);outline-offset:1px}
+
+/* ── Chart + Gantt ───────────────────────────────────── */
+.chart-wrap{position:relative;height:320px;width:100%;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)}
+.chart-fallback{width:100%;height:100%}
+.gantt-wrap{overflow-x:auto;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)}
+.gantt-legend{display:flex;gap:var(--space-4);flex-wrap:wrap;margin-top:var(--space-3);font-size:.74rem;color:var(--color-text-muted)}
+.legend-dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:.35rem;vertical-align:middle}
+.unit-toggle-wrap{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-2) 0 var(--space-3);flex-wrap:wrap}
+.unit-toggle-label{font-size:.8rem;color:var(--color-text-muted);font-weight:600}
+.unit-toggle{display:inline-flex;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:999px;padding:3px;gap:2px}
+.unit-btn{border:0;background:transparent;padding:.4rem .85rem;border-radius:999px;font-family:var(--font-body);font-size:.76rem;font-weight:600;color:var(--color-text-muted);cursor:pointer;transition:background .15s,color .15s}
+.unit-btn:hover{color:var(--color-text)}
+.unit-btn.active{background:var(--rr-orange);color:#fff;box-shadow:0 2px 6px rgba(255,126,8,.35)}
+
+/* ── HITL ────────────────────────────────────────────── */
+.hitl-question{background:var(--color-surface-2);border-left:3px solid var(--rr-orange);padding:var(--space-4);border-radius:var(--radius-md);margin-bottom:var(--space-3)}
+.hitl-question .q-text{font-weight:600;margin-bottom:.35rem;font-size:.9rem}
+.hitl-question .q-meta{font-size:.7rem;color:var(--color-text-muted);margin-bottom:.4rem}
+.hitl-question textarea,.feedback-box{width:100%;min-height:68px;padding:.65rem;border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-text);font-family:inherit;font-size:.86rem;resize:vertical}
+.feedback-box{min-height:130px}
+.hitl-question textarea:focus,.feedback-box:focus{outline:2px solid var(--rr-orange);outline-offset:1px;border-color:var(--rr-orange)}
+.detail-meta{display:flex;gap:var(--space-2);flex-wrap:wrap;align-items:center;margin-top:.4rem}
+.actions-bar{position:sticky;bottom:0;background:var(--color-surface);border-top:1px solid var(--color-border);padding:var(--space-4) var(--space-5);display:flex;gap:var(--space-3);justify-content:flex-end;z-index:10;box-shadow:0 -4px 16px rgba(0,0,0,.4);flex-wrap:wrap;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+
+/* ── HU MODAL OVERLAY ────────────────────────────────── */
+.hu-modal{position:fixed;inset:0;z-index:var(--z-modal);display:flex;align-items:flex-start;justify-content:center;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);padding:var(--space-6) var(--space-4);overflow-y:auto;animation:fadeIn .22s ease}
+.hu-modal.hidden{display:none}
+.hu-modal-box{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);max-width:1100px;width:100%;position:relative;margin:auto;box-shadow:var(--shadow-lg)}
+.hu-modal-close{position:absolute;top:var(--space-4);right:var(--space-4);background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;color:var(--color-text-muted);z-index:10;transition:var(--t-fast)}
+.hu-modal-close:hover{background:var(--rag-red-bg);border-color:var(--rag-red);color:var(--rag-red)}
+.hu-modal-header{padding:var(--space-6) var(--space-6) var(--space-4);border-bottom:1px solid var(--color-border)}
+.hu-modal-body{padding:var(--space-5) var(--space-6);max-height:75vh;overflow-y:auto}
+.hu-modal-footer{padding:var(--space-4) var(--space-6);border-top:1px solid var(--color-border);display:flex;gap:var(--space-3);justify-content:flex-end;flex-wrap:wrap}
+
+/* ── METRIC INFO MODAL ───────────────────────────────── */
+.metric-modal{position:fixed;inset:0;z-index:var(--z-modal);display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);animation:fadeIn .15s ease}
+.metric-modal.hidden{display:none}
+.metric-modal-box{background:var(--color-surface);border:1px solid var(--rr-orange-border);border-radius:var(--radius-xl);max-width:460px;width:90%;padding:var(--space-6);position:relative;box-shadow:var(--shadow-lg)}
+.metric-modal-title{font-size:1.15rem;font-weight:700;color:var(--rr-orange);margin-bottom:var(--space-2)}
+.metric-modal-value{font-family:var(--font-display);font-size:2.5rem;font-weight:700;color:var(--color-text);margin:.2rem 0 var(--space-3)}
+.metric-modal-desc{font-size:.88rem;color:var(--color-text-muted);line-height:1.55}
+.metric-modal-close{position:absolute;top:.8rem;right:.8rem;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;color:var(--color-text-muted);transition:var(--t-fast)}
+.metric-modal-close:hover{background:var(--color-surface-3);color:var(--color-text)}
+
+/* ── FLOATING GUIDE ──────────────────────────────────── */
+.guide-float-btn{
+  position:fixed;right:0;top:50%;transform:translateY(-50%);
+  z-index:var(--z-panel);
+  background:var(--color-surface-2);border:1px solid var(--color-border);border-right:none;
+  border-radius:var(--radius-md) 0 0 var(--radius-md);
+  padding:.8rem .5rem;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  color:var(--rr-orange);font-size:.7rem;font-weight:700;
+  transition:var(--t-normal);writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.5px;text-transform:uppercase;
+  box-shadow:-2px 0 10px rgba(0,0,0,.3);
+}
+.guide-float-btn:hover{background:var(--rr-orange-light);border-color:var(--rr-orange-border)}
+.guide-float-btn .gfb-icon{font-size:1.1rem;writing-mode:horizontal-tb}
+.guide-panel{
+  position:fixed;right:0;top:0;bottom:0;width:360px;z-index:var(--z-panel);
+  background:var(--color-surface);border-left:1px solid var(--rr-orange-border);
+  box-shadow:-8px 0 30px rgba(0,0,0,.5);
+  transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.guide-panel.open{transform:translateX(0)}
+.guide-panel-head{padding:var(--space-5) var(--space-5) var(--space-4);border-bottom:1px solid var(--color-border);display:flex;align-items:center;justify-content:space-between;background:var(--color-surface-2)}
+.guide-panel-head h2{font-size:1rem;color:var(--rr-orange);font-weight:700}
+.guide-panel-close{background:transparent;border:none;color:var(--color-text-muted);cursor:pointer;font-size:1.2rem;padding:.2rem;line-height:1;transition:color var(--t-fast)}
+.guide-panel-close:hover{color:var(--color-text)}
+.guide-panel-body{flex:1;overflow-y:auto;padding:var(--space-5)}
+.guide-panel-body ul{list-style:none;padding:0}
+.guide-panel-body li{padding:.55rem 0;border-bottom:1px solid var(--color-border);font-size:.86rem;color:var(--color-text-muted);line-height:1.5}
+.guide-panel-body li:last-child{border-bottom:none}
+.guide-panel-body li strong{color:var(--color-text)}
+.guide-panel-section{font-size:.62rem;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--rr-orange);margin:var(--space-4) 0 var(--space-2)}
+
+/* ── AI ACCELERATOR BANNERS ──────────────────────────── */
+.ai-accel{
+  background:linear-gradient(135deg,rgba(255,126,8,.07),rgba(255,154,0,.04));
+  border:1px solid rgba(255,126,8,.25);border-radius:var(--radius-lg);
+  padding:var(--space-4) var(--space-5);margin-bottom:var(--space-4);
+  display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;
+}
+.ai-accel-icon{font-size:1.8rem;flex-shrink:0}
+.ai-accel-body{flex:1;min-width:180px}
+.ai-accel-title{font-size:.9rem;font-weight:700;color:var(--rr-orange);margin-bottom:.15rem;font-family:var(--font-display)}
+.ai-accel-desc{font-size:.78rem;color:var(--color-text-muted);line-height:1.45}
+.ai-accel-tag{font-size:.6rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,126,8,.65);margin-bottom:.2rem;display:block}
+
+/* ── PMO QUICK BUTTON ────────────────────────────────── */
+.pmo-quick{border-top:1px solid var(--color-border);padding-top:var(--space-5);margin-top:var(--space-2);display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap}
+.pmo-quick p{font-size:.82rem;color:var(--color-text-muted);flex:1;min-width:200px}
+
+/* ── TOOLTIP (JS-managed) ────────────────────────────── */
+.ux-tip{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;background:var(--rr-orange-light);
+  color:var(--rr-orange);border:1px solid var(--rr-orange-border);
+  font-size:.6rem;font-weight:700;cursor:help;margin-left:.25rem;vertical-align:middle;user-select:none;transition:var(--t-fast);
+}
+.ux-tip:hover{background:var(--rr-orange);color:#fff}
+#js-tooltip{
+  position:fixed;z-index:var(--z-tooltip);
+  background:#111;color:#fff;padding:.55rem .8rem;border-radius:7px;
+  font-size:.74rem;max-width:270px;line-height:1.45;
+  pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.6);
+  opacity:0;transition:opacity .15s ease;border:1px solid rgba(255,255,255,.08);
+  font-family:var(--font-body);font-weight:400;
+}
+
+/* ── FOOTER ──────────────────────────────────────────── */
+.footer{background:#000;color:rgba(255,255,255,.3);text-align:center;padding:var(--space-5) var(--space-4);font-size:.76rem;margin-top:var(--space-8);border-top:1px solid var(--color-border)}
+.footer strong{color:var(--rr-orange)}
+
+/* ── MISC ────────────────────────────────────────────── */
+.bpm-input,.bpm-textarea{width:100%;padding:.5rem .65rem;border:1px solid var(--color-border);border-radius:var(--radius-md);font-family:inherit;font-size:.86rem;background:var(--color-surface-2);color:var(--color-text)}
+.bpm-input:focus,.bpm-textarea:focus{outline:2px solid var(--rr-orange);outline-offset:1px;border-color:var(--rr-orange)}
+.bpm-textarea{min-height:88px;resize:vertical}
+
+/* ── RESPONSIVE ──────────────────────────────────────── */
+@media (max-width:960px){
+  .header{padding:0 var(--space-4);gap:.5rem}
+  .brand-sub{display:none}
+  .tab{padding:0 .65rem;font-size:.76rem}
+  .page-title{font-size:1.4rem}
+  main{padding:var(--space-4)}
+  .hero{padding:var(--space-5)}
+  .hero-title{font-size:1.6rem}
+  .guide-panel{width:100%}
+}
+@media print{
+  .header,.backup-banner,.guide-float-btn,.guide-panel,.hu-modal,.metric-modal{display:none!important}
+  .view{display:block!important;page-break-after:always}
+  .card{box-shadow:none;border:1px solid #444}
+  :root{--color-bg:#fff;--color-text:#000;--color-surface:#fff}
+}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Saltar al contenido</a>
+
+<!-- ── HEADER ─────────────────────────────────────────── -->
+<header class="header" role="banner">
+  <div class="logo" aria-hidden="true">RR</div>
+  <div class="brand">
+    <span class="brand-title">Requirement Refinator</span>
+    <span class="brand-sub" id="header-sprint-sub">ISO 29148 · ISO 25010 · EVM</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:.4rem;margin-left:var(--space-4);padding-left:var(--space-4);border-left:1px solid rgba(255,255,255,.12)">
+    <div style="display:flex;flex-direction:column;line-height:1.1;text-align:right">
+      <span style="color:#fff;font-family:var(--font-display);font-weight:700;font-size:.92rem;letter-spacing:-.2px">Sofka</span>
+      <span style="color:rgba(255,126,8,.8);font-size:.52rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase">Technologies</span>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Vistas principales">
+    <button class="tab active" role="tab" data-view="dashboard" aria-selected="true">📋 Dashboard</button>
+    <button class="tab" role="tab" data-view="progress" id="tab-progress" aria-selected="false">📈 Avance del Sprint</button>
+    <button class="tab" role="tab" data-view="guia" id="tab-guia" aria-selected="false">📖 Guía</button>
+    <div class="tab-dropdown" id="tab-reports-wrap">
+      <button class="tab" id="tab-reports" aria-haspopup="true" aria-expanded="false">📥 Respaldo ▾</button>
+      <div class="tab-menu" role="menu">
+        <button data-report="export-md">⬇ Exportar Feedback + EVM (Markdown)</button>
+        <button data-report="import-md">⬆ Importar Feedback + EVM (Markdown)</button>
+        <div class="menu-sep"></div>
+        <button data-report="export-json">⬇ Exportar Estado (JSON)</button>
+        <button data-report="pdf">📑 Imprimir / Exportar PDF</button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- ── BACKUP BANNER ─────────────────────────────────── -->
+<div class="backup-banner" id="backup-banner" role="alert">
+  <span>⚠</span>
+  <div class="bb-text">
+    <strong>Cambios sin descargar.</strong>
+    Si cierras o recargas esta pestaña perderás el feedback HITL y las mediciones de avance.
+  </div>
+  <div class="bb-actions">
+    <button class="btn btn-primary btn-sm" id="bb-download">⬇ Descargar respaldo</button>
+    <button class="btn btn-ghost btn-sm" id="bb-dismiss">Ocultar</button>
+  </div>
+</div>
+
+<!-- ── FLOATING GUIDE BUTTON ─────────────────────────── -->
+<button class="guide-float-btn" id="guide-float-btn" aria-label="Abrir guía de uso">
+  <span class="gfb-icon">💡</span>
+  Guía
+</button>
+
+<!-- ── FLOATING GUIDE PANEL ──────────────────────────── -->
+<aside class="guide-panel" id="guide-panel" aria-label="Guía de la vista actual">
+  <div class="guide-panel-head">
+    <h2 id="guide-panel-title">¿Qué hacer aquí?</h2>
+    <button class="guide-panel-close" id="guide-panel-close" aria-label="Cerrar guía">✕</button>
+  </div>
+  <div class="guide-panel-body" id="guide-panel-body">
+    <!-- populated by JS based on active view -->
+  </div>
+</aside>
+
+<!-- ── MAIN ──────────────────────────────────────────── -->
+<main id="main" role="main">
+
+  <!-- Vista: Empty state -->
+  <section class="view" id="view-empty" role="tabpanel">
+    <div class="page-header">
+      <h1 class="page-title">Estado inicial — faltan insumos</h1>
+      <p class="page-sub">El orquestador no encontró datos suficientes para renderizar el dashboard.</p>
+    </div>
+    <div id="empty-callouts"></div>
+    <div class="card"><h2>Insumos detectados</h2><ul id="empty-found" style="list-style:none;padding:0"></ul></div>
+  </section>
+
+  <!-- Vista 1: Dashboard Sprint -->
+  <section class="view active" id="view-dashboard" role="tabpanel">
+
+    <!-- Hero / Cover -->
+    <div class="hero" id="dash-hero">
+      <div class="hero-header">
+        <div>
+          <div class="hero-badge">Diagnóstico de Sprint</div>
+          <h1 class="hero-title" id="dash-title">Dashboard del <span>Sprint</span></h1>
+          <p class="hero-sub" id="dash-sub">Cargando datos…</p>
+        </div>
+        <div id="dash-score-badge"></div>
+      </div>
+      <div class="hero-kpis" id="kpi-grid"></div>
+    </div>
+
+    <!-- Diagnostic gauges -->
+    <div class="diag-gauges" id="gauges-grid"></div>
+
+    <!-- Sprint summary (distribution of levels + effort) -->
+    <div class="sprint-summary" id="sprint-summary">
+      <h3>Resumen de diagnóstico</h3>
+      <div id="sprint-summary-content"></div>
+    </div>
+
+    <!-- HU table -->
+    <div class="card">
+      <h2>Historias de Usuario
+        <span class="ux-tip" tabindex="0" data-tip="Cada HU fue analizada por un agente aplicando INVEST + ISO 29148 + ISO 25010 y generó CAs Gherkin, tareas PERT, riesgos y dependencias.">?</span>
+      </h2>
+      <div style="overflow-x:auto">
+        <table class="tbl" id="hu-table">
+          <thead><tr>
+            <th>ID</th>
+            <th>Historia</th>
+            <th>Diagnóstico <span class="ux-tip" tabindex="0" data-tip="Calificación 0–5 calculada como: ISO 29148 × 50% + INVEST × 30% + ISO 25010 × 20%.">?</span></th>
+            <th>Nivel</th>
+            <th>Horas / Tipos <span class="ux-tip" tabindex="0" data-tip="Total PERT de la HU con desglose por perfil: DEV · FE · QA · DB · DEVOPS · UX.">?</span></th>
+            <th>Estado HITL</th>
+            <th>Acción</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Vista 2: Avance del Sprint -->
+  <section class="view" id="view-progress" role="tabpanel">
+    <div class="page-header">
+      <h1 class="page-title">📈 Avance del Sprint</h1>
+      <p class="page-sub">Earned Value Management, Cronograma y Radar de Riesgos.</p>
+    </div>
+
+    <!-- Sub-tabs -->
+    <div class="sub-tabs" id="progress-subtabs">
+      <button class="sub-tab active" data-sub="evm">💰 EVM</button>
+      <button class="sub-tab" data-sub="gantt">📅 Cronograma</button>
+      <button class="sub-tab" data-sub="riesgos">⚠️ Radar de Riesgos</button>
+    </div>
+
+    <div id="progress-content"></div>
+  </section>
+
+
+  <!-- Vista 3: Guía de uso -->
+  <section class="view" id="view-guia" role="tabpanel" aria-labelledby="tab-guia">
+    <div class="page-header">
+      <h1 class="page-title">📖 Guía de Uso — Requirement Refinator</h1>
+      <p class="page-sub">Todo lo que necesitas saber para sacarle el máximo provecho al sistema.</p>
+    </div>
+
+    <!-- Paso 1: Configurar contexto -->
+    <div class="card">
+      <h2>① Configurar el Contexto del Proyecto</h2>
+      <p style="font-size:.88rem;color:var(--color-text-muted);margin-bottom:var(--space-4)">Antes de analizar HUs, el sistema necesita conocer el proyecto. Crea dos archivos en <code style="background:var(--color-surface-2);padding:2px 6px;border-radius:4px">docs/contexto/</code>:</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4)">
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+          <h3 style="color:var(--rr-orange);font-size:.9rem;margin-bottom:var(--space-2)">📄 contexto-funcional.md</h3>
+          <ul style="list-style:none;padding:0;font-size:.84rem">
+            <li style="padding:.25rem 0">• Nombre y descripción del proyecto</li>
+            <li style="padding:.25rem 0">• Dominio de negocio y usuarios finales</li>
+            <li style="padding:.25rem 0">• Reglas de negocio fundamentales</li>
+            <li style="padding:.25rem 0">• Flujos de proceso principales</li>
+            <li style="padding:.25rem 0">• Integraciones con sistemas externos</li>
+            <li style="padding:.25rem 0">• Restricciones regulatorias / legales</li>
+          </ul>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+          <h3 style="color:var(--rr-orange);font-size:.9rem;margin-bottom:var(--space-2)">⚙️ contexto-tecnico.md</h3>
+          <ul style="list-style:none;padding:0;font-size:.84rem">
+            <li style="padding:.25rem 0">• Stack tecnológico (lenguajes, frameworks)</li>
+            <li style="padding:.25rem 0">• Arquitectura de microservicios</li>
+            <li style="padding:.25rem 0">• Base de datos y patrones de datos</li>
+            <li style="padding:.25rem 0">• Entornos: dev, qa, staging, prod</li>
+            <li style="padding:.25rem 0">• APIs externas y credenciales</li>
+            <li style="padding:.25rem 0">• Estándares de código del equipo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout callout-orange" style="margin-top:var(--space-4)">
+        <h3>💡 Prompt para transformar documentos existentes</h3>
+        <p>Copia este prompt en Gemini o ChatGPT junto con tus documentos del proyecto:</p>
+      </div>
+      <pre style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4);font-size:.76rem;overflow-x:auto;white-space:pre-wrap;margin-top:var(--space-3);line-height:1.6;color:var(--color-text-muted)">Tengo los siguientes documentos de un proyecto de software [adjuntar documentos].
+Necesito que extraigas y estructures la información en dos archivos Markdown:
+
+1. contexto-funcional.md con: nombre del proyecto, dominio de negocio, usuarios finales,
+   reglas de negocio, flujos principales, integraciones externas y restricciones.
+
+2. contexto-tecnico.md con: stack tecnológico completo, arquitectura (microservicios/monolítico),
+   base de datos, entornos de despliegue, APIs externas y estándares del equipo.
+
+Usa títulos H2 para cada sección. Sé específico y conciso. Si algo no está documentado,
+indica "No documentado — requiere confirmación del equipo".</pre>
+      <div class="ai-accel" style="margin-top:var(--space-4)">
+        <div class="ai-accel-icon">🤖</div>
+        <div class="ai-accel-body">
+          <span class="ai-accel-tag">Acelerador IA · Contexto</span>
+          <div class="ai-accel-title">NotebookLM — Base de Conocimiento del Proyecto</div>
+          <div class="ai-accel-desc">Sube todos los documentos del proyecto a NotebookLM. Genera un resumen de audio, consulta en lenguaje natural y exporta el contexto estructurado para los archivos de contexto.</div>
+        </div>
+        <a href="https://notebooklm.google.com" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Abrir NotebookLM ↗</a>
+      </div>
+    </div>
+
+    <!-- Paso 2: Analizar el Sprint -->
+    <div class="card">
+      <h2>② Analizar el Sprint con el Agente</h2>
+      <p style="font-size:.88rem;color:var(--color-text-muted);margin-bottom:var(--space-4)">Una vez que tienes el contexto y las HUs en <code style="background:var(--color-surface-2);padding:2px 6px;border-radius:4px">docs/HUs/Sprint-X/</code>, ejecuta el análisis desde Claude Code / Antigravity:</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:var(--space-3);margin-bottom:var(--space-4)">
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+          <div style="font-family:var(--font-mono);font-size:.8rem;color:var(--rr-orange);margin-bottom:.5rem">/refinar-sprint Sprint-1</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">Analiza TODAS las HUs del sprint en paralelo. Genera este <code>index.html</code>.</p>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+          <div style="font-family:var(--font-mono);font-size:.8rem;color:var(--rr-orange);margin-bottom:.5rem">/refinar-sprint Sprint-1 --iteracion</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">Re-analiza SOLO las HUs rechazadas o con feedback. Las aprobadas se preservan.</p>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+          <div style="font-family:var(--font-mono);font-size:.8rem;color:var(--rr-orange);margin-bottom:.5rem">/refinar-sprint Sprint-1 --consolidar</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">Solo regenera el HTML con el <code>data.json</code> existente. No re-analiza.</p>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)">
+          <div style="font-family:var(--font-mono);font-size:.8rem;color:var(--rr-orange);margin-bottom:.5rem">/generar-informe Sprint-1</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">Genera el informe ejecutivo embebido en el dashboard (requiere todas las HUs aprobadas).</p>
+        </div>
+      </div>
+      <div class="callout callout-amber">
+        <h3>⚡ Tip de rendimiento</h3>
+        <p>El sistema lanza 1 agente por HU en paralelo. 11 HUs = ~11 invocaciones simultáneas = análisis completo en ~3-5 minutos.</p>
+      </div>
+    </div>
+
+    <!-- Paso 3: Revisión HITL -->
+    <div class="card">
+      <h2>③ Flujo de Revisión HITL (Human-in-the-Loop)</h2>
+      <div style="counter-reset:step;display:flex;flex-direction:column;gap:var(--space-3)">
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--rr-orange);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">1</div>
+          <div><strong>Revisar cada HU</strong> — En la tabla del Dashboard, haz clic en <em>Revisar HU</em>. Se abre el Focus Mode con todos los detalles.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--rr-orange);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">2</div>
+          <div><strong>Expandir paneles</strong> — Usa <em>Expandir todo</em> para ver narrativa, CAs Gherkin, tareas PERT, riesgos, dependencias y preguntas HITL.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--rr-orange);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">3</div>
+          <div><strong>Ajustar estimaciones PERT</strong> — Edita O/P/Pe en la tabla de tareas. E = (O + 4P + Pe) / 6 se recalcula automáticamente.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--rr-orange);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">4</div>
+          <div><strong>Responder preguntas HITL</strong> — El agente generó preguntas de clarificación. Respóndelas con el PO antes de iniciar desarrollo.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--rr-orange);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">5</div>
+          <div><strong>Aprobar o Rechazar</strong> — Si la HU está lista, <em>Aprobar</em>. Si necesita mejoras, <em>Rechazar</em> y escribe el feedback. Al aprobar todas, se ofrece descargar el resumen refinado.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--rr-orange);color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">6</div>
+          <div><strong>Exportar respaldo</strong> — Usa <em>Respaldo → Exportar Markdown</em>. <strong>El estado vive en localStorage</strong> — si limpias el navegador lo perderás. Exporta con frecuencia.</div>
+        </div>
+        <div style="display:flex;gap:var(--space-3);align-items:flex-start">
+          <div style="background:var(--color-border-2);color:var(--color-text);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex-shrink:0">7</div>
+          <div><strong>Iterar con feedback</strong> — Ejecuta <code style="background:var(--color-surface-2);padding:1px 5px;border-radius:3px">/refinar-sprint Sprint-X --iteracion</code> para re-analizar solo las HUs rechazadas.</div>
+        </div>
+      </div>
+      <div class="callout callout-red" style="margin-top:var(--space-4)">
+        <h3>⚠ Estado en localStorage — riesgo de pérdida</h3>
+        <p>El estado de feedback, PERT y mediciones EVM vive en el <code>localStorage</code> del navegador. Si limpias la caché o abres el archivo en otro navegador, el estado se pierde. <strong>Exporta el respaldo Markdown periódicamente</strong> (mínimo al final de cada sesión de revisión).</p>
+      </div>
+    </div>
+
+    <!-- Paso 4: Monitoreo EVM -->
+    <div class="card">
+      <h2>④ Monitoreo EVM — Avance del Sprint</h2>
+      <p style="font-size:.88rem;color:var(--color-text-muted);margin-bottom:var(--space-4)">Una vez aprobadas las HUs, ve a <strong>Avance del Sprint → EVM</strong> para monitorear el progreso.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--space-3)">
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3)">
+          <div style="font-weight:700;color:var(--rr-orange);margin-bottom:.3rem">① Declara las fechas</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">Ingresa inicio y fin del sprint. Usa <em>⚡ Auto</em> para calcular el fin automáticamente excluyendo festivos Colombia.</p>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3)">
+          <div style="font-weight:700;color:var(--rr-orange);margin-bottom:.3rem">② Ajusta el BAC</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">El BAC viene del PERT. Si hay ajustes de alcance, edita el campo BAC editable en horas.</p>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3)">
+          <div style="font-weight:700;color:var(--rr-orange);margin-bottom:.3rem">③ Registra mediciones</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">Al cierre de cada día (mínimo 2×/semana), ingresa PV, EV y AC por HU. Usa <em>📌 Guardar medición</em> para crear un snapshot.</p>
+        </div>
+        <div style="background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3)">
+          <div style="font-weight:700;color:var(--rr-orange);margin-bottom:.3rem">④ Genera Bitácora PMO</div>
+          <p style="font-size:.8rem;color:var(--color-text-muted)">El botón <em>📋 Generar Bitácora PMO (PDF)</em> abre un reporte en modo claro listo para imprimir o enviar al cliente.</p>
+        </div>
+      </div>
+      <div class="callout callout-green" style="margin-top:var(--space-4)">
+        <h3>📊 Interpretar indicadores EVM</h3>
+        <p>CPI &gt; 1.0 = bajo presupuesto · SPI &gt; 1.0 = adelantado · TCPI &gt; 1.2 = muy difícil de recuperar · EAC = estimación de costo final del sprint</p>
+      </div>
+    </div>
+
+    <!-- Paso 5: Cierre del Sprint -->
+    <div class="card">
+      <h2>⑤ Cierre del Sprint</h2>
+      <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:var(--space-2)">
+        <li style="display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3);background:var(--color-surface-2);border-radius:var(--radius-md)"><span>✅</span><div><strong>Medición final EVM</strong> — Registra la medición del último día con EV=BAC si completaste el sprint.</div></li>
+        <li style="display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3);background:var(--color-surface-2);border-radius:var(--radius-md)"><span>✅</span><div><strong>Revisar riesgos</strong> — En <em>Radar de Riesgos</em>, marca como cerrados los riesgos que no se materializaron.</div></li>
+        <li style="display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3);background:var(--color-surface-2);border-radius:var(--radius-md)"><span>✅</span><div><strong>Exportar respaldo final</strong> — <em>Respaldo → Exportar Markdown</em>. Guarda este archivo en Google Drive o el repositorio.</div></li>
+        <li style="display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3);background:var(--color-surface-2);border-radius:var(--radius-md)"><span>✅</span><div><strong>Bitácora PMO final</strong> — Genera el reporte PDF y comparte con el cliente / PMO.</div></li>
+        <li style="display:flex;align-items:flex-start;gap:var(--space-3);padding:var(--space-3);background:var(--color-surface-2);border-radius:var(--radius-md)"><span>✅</span><div><strong>Próximo sprint</strong> — Crea la carpeta <code>docs/HUs/Sprint-2/</code>, agrega las nuevas HUs y ejecuta <code>/refinar-sprint Sprint-2</code>.</div></li>
+      </ul>
+    </div>
+
+    <!-- Herramientas IA complementarias -->
+    <div class="card">
+      <h2>🤖 Herramientas IA Complementarias</h2>
+      <div class="ai-accel">
+        <div class="ai-accel-icon">🔮</div>
+        <div class="ai-accel-body">
+          <span class="ai-accel-tag">Persistencia entre sesiones</span>
+          <div class="ai-accel-title">Google Drive + NotebookLM</div>
+          <div class="ai-accel-desc">Guarda los archivos del proyecto (contexto, HUs, respaldos Markdown) en Google Drive. Sube al NotebookLM para consultar en lenguaje natural el historial del proyecto entre sesiones.</div>
+        </div>
+        <a href="https://notebooklm.google.com" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Abrir NotebookLM ↗</a>
+      </div>
+      <div class="ai-accel">
+        <div class="ai-accel-icon">✨</div>
+        <div class="ai-accel-body">
+          <span class="ai-accel-tag">Análisis avanzado</span>
+          <div class="ai-accel-title">Gemini Advanced — Refinamiento de HUs</div>
+          <div class="ai-accel-desc">Usa Gemini con los documentos del proyecto para refinar HUs ambiguas, generar criterios de aceptación adicionales y validar la coherencia con el contexto de negocio.</div>
+        </div>
+        <a href="https://gemini.google.com" target="_blank" rel="noopener" class="btn btn-primary btn-sm">Abrir Gemini ↗</a>
+      </div>
+    </div>
+
+    <!-- Créditos -->
+    <div class="card" style="text-align:center;padding:var(--space-8)">
+      <div style="font-size:2rem;margin-bottom:var(--space-3)">🚀</div>
+      <h2 style="color:var(--rr-orange);margin-bottom:var(--space-2)">Requirement Refinator</h2>
+      <p style="color:var(--color-text-muted);font-size:.9rem;max-width:500px;margin:0 auto var(--space-3)">Herramienta de refinamiento de Historias de Usuario con IA · ISO/IEC 29148:2018 · ISO/IEC 25010 · PMI-PMBOK 7</p>
+      <p style="font-size:.78rem;color:var(--color-text-muted)">Creado por <strong style="color:var(--color-text)">Mauricio Sepúlveda Henao</strong> con Claude Code, Antigravity, Gemini y NotebookLM</p>
+      <p style="font-size:.72rem;color:var(--color-text-faint);margin-top:.35rem">© Sofka Technologies 2026. Todos los derechos reservados.</p>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ── HU DETAIL MODAL ────────────────────────────────── -->
+<div class="hu-modal hidden" id="hu-modal" role="dialog" aria-modal="true" aria-labelledby="hu-modal-title">
+  <div class="hu-modal-box">
+    <button class="hu-modal-close" id="hu-modal-close" aria-label="Cerrar">✕</button>
+    <div class="hu-modal-header">
+      <h1 id="hu-modal-title" style="font-size:1.4rem;font-weight:700;color:var(--color-text)">…</h1>
+      <div id="hu-modal-meta"></div>
+    </div>
+    <div class="hu-modal-body" id="hu-modal-body"><!-- populated by JS --></div>
+    <div class="hu-modal-footer" id="hu-modal-footer">
+      <button class="btn btn-ghost" id="btn-save">💾 Guardar cambios</button>
+      <button class="btn btn-reject" id="btn-reject">✗ Rechazar / Iterar</button>
+      <button class="btn btn-approve" id="btn-approve">✓ Aprobar HU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── METRIC INFO MODAL ──────────────────────────────── -->
+<div class="metric-modal hidden" id="metric-modal" role="dialog" aria-modal="true">
+  <div class="metric-modal-box">
+    <button class="metric-modal-close" id="metric-modal-close">✕</button>
+    <div id="metric-modal-tag" class="ai-accel-tag"></div>
+    <div class="metric-modal-title" id="metric-modal-title"></div>
+    <div class="metric-modal-value" id="metric-modal-value"></div>
+    <div class="metric-modal-desc" id="metric-modal-desc"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div><strong style="color:var(--rr-orange)">Sofka Technologies</strong> · Requirement Refinator · ISO/IEC 29148:2018 · ISO/IEC 25010 · PMI-PMBOK 7</div>
+  <div style="margin-top:.25rem">© Sofka Technologies 2026. Todos los derechos reservados.</div>
+  <div style="margin-top:.15rem;font-size:.65rem;opacity:.6">Creado por Mauricio Sepúlveda Henao con Claude Code, Antigravity, Gemini y NotebookLM.</div>
+</footer>
+
+<!-- JS TOOLTIP -->
+<div id="js-tooltip"></div>
+
+<script>
+  window.__SPRINT_DATA__ = /*__SPRINT_DATA__*/null;
+</script>
+
+<script>
+(function(){
+  'use strict';
+
+  // ── Data + keys ────────────────────────────────────────
+  const D = window.__SPRINT_DATA__;
+  const SPRINT_ID = (D && D.meta && D.meta.sprint_id) || (D && D.config && ('Sprint-'+(D.config.sprint_actual||'X'))) || 'Sprint-X';
+  const LS_KEY    = 'rr_hitl_' + SPRINT_ID;
+  const EVM_KEY   = 'rr_evm_'  + SPRINT_ID;
+  const DIRTY_KEY = 'rr_dirty_'+ SPRINT_ID;
+  const UNIT_KEY  = 'rr_evm_unit_' + SPRINT_ID;
+  const DATES_KEY = 'rr_dates_' + SPRINT_ID;
+  const BAC_KEY   = 'rr_bac_'  + SPRINT_ID;
+  const STATE_VERSION = '1.2';
+  const HOURLY_RATE = 80000;
+  const USD_RATE    = 4100;
+
+  // ── Unit helpers ───────────────────────────────────────
+  function loadUnit(){ return localStorage.getItem(UNIT_KEY)||'cop'; }
+  function saveUnit(u){ localStorage.setItem(UNIT_KEY,u); }
+  function loadCustomBacH(){ const v=localStorage.getItem(BAC_KEY); return v!=null?+v:null; }
+  function saveCustomBacH(v){ if(v>0){localStorage.setItem(BAC_KEY,String(v));markDirty();}else{localStorage.removeItem(BAC_KEY);} }
+  function toUnit(cop){
+    const u=loadUnit();
+    if(u==='hours') return (+cop||0)/HOURLY_RATE;
+    if(u==='usd')   return (+cop||0)/USD_RATE;
+    return +cop||0;
+  }
+  function fromUnit(val){
+    const u=loadUnit(); const v=+val||0;
+    if(u==='hours') return v*HOURLY_RATE;
+    if(u==='usd')   return v*USD_RATE;
+    return v;
+  }
+  function unitSuffix(){ const u=loadUnit(); return u==='hours'?'h':(u==='usd'?'USD':'COP'); }
+  function fmtEvm(cop){
+    const u=loadUnit(); const v=toUnit(cop);
+    if(u==='hours') return (isFinite(v)?v:0).toFixed(1)+' h';
+    if(u==='usd'){ if(v>=1e6)return'US$'+(v/1e6).toFixed(2)+'M'; if(v>=1e3)return'US$'+(v/1e3).toFixed(1)+'K'; return'US$'+v.toFixed(0); }
+    if(v>=1e6)return'$'+(v/1e6).toFixed(1)+'M'; if(v>=1e3)return'$'+(v/1e3).toFixed(0)+'K'; return'$'+Math.round(v);
+  }
+
+  // ── Date helpers ───────────────────────────────────────
+  function loadDates(){ try{return JSON.parse(localStorage.getItem(DATES_KEY))||{};}catch(e){return{};} }
+  function saveDates(o){ localStorage.setItem(DATES_KEY,JSON.stringify(o||{})); markDirty(); }
+  function parseISODate(s){ if(!s)return null; const[y,m,dd]=String(s).split('-').map(Number); if(!y||!m||!dd)return null; return new Date(y,m-1,dd); }
+  function toISODate(d){ if(!d)return''; const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0'); return y+'-'+m+'-'+dd; }
+  function isWeekend(d){ const wd=d.getDay(); return wd===0||wd===6; }
+  function addBusinessDays(start,n){ if(!start)return null; const d=new Date(start.getTime()); let count=0; while(isNonWorkDay(d))d.setDate(d.getDate()+1); count=1; while(count<n){d.setDate(d.getDate()+1);if(!isNonWorkDay(d))count++;} return d; }
+  function businessDaysBetween(a,b){ if(!a||!b)return 0; const s=new Date(a.getTime()),e=new Date(b.getTime()); if(e<s)return 0; let c=0; const d=new Date(s.getTime()); while(d<=e){if(!isNonWorkDay(d))c++;d.setDate(d.getDate()+1);} return c; }
+  function businessDayList(start,n){ const out=[]; if(!start)return out; const d=new Date(start.getTime()); while(isNonWorkDay(d))d.setDate(d.getDate()+1); out.push(new Date(d.getTime())); while(out.length<n){d.setDate(d.getDate()+1);if(!isNonWorkDay(d))out.push(new Date(d.getTime()));} return out; }
+  // ── Colombia public holidays (Ley Emiliani) ───────────
+  const CO_HOLIDAYS = new Set([
+    // 2024
+    '2024-01-01','2024-01-08','2024-03-25','2024-03-28','2024-03-29',
+    '2024-05-01','2024-05-13','2024-06-03','2024-06-10','2024-07-01',
+    '2024-07-20','2024-08-07','2024-08-19','2024-10-14','2024-11-04',
+    '2024-11-11','2024-12-08','2024-12-25',
+    // 2025
+    '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18',
+    '2025-05-01','2025-06-02','2025-06-23','2025-06-30','2025-07-20',
+    '2025-08-07','2025-08-18','2025-10-13','2025-11-03','2025-11-17',
+    '2025-12-08','2025-12-25',
+    // 2026
+    '2026-01-01','2026-01-05','2026-03-23','2026-04-02','2026-04-03',
+    '2026-05-01','2026-05-18','2026-06-08','2026-06-15','2026-06-29',
+    '2026-07-20','2026-08-07','2026-08-17','2026-10-12','2026-11-02',
+    '2026-11-16','2026-12-08','2026-12-25'
+  ]);
+  function isHoliday(d){ return CO_HOLIDAYS.has(toISODate(d)); }
+  function isNonWorkDay(d){ return isWeekend(d)||isHoliday(d); }
+
+  const DOW_ES=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const MES_ES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  function fmtDateShort(d){ return DOW_ES[d.getDay()]+' '+String(d.getDate()).padStart(2,'0')+'/'+MES_ES[d.getMonth()]; }
+  function fmtDateLong(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear(); }
+
+  // ── Dirty / banner ─────────────────────────────────────
+  let dirty=localStorage.getItem(DIRTY_KEY)==='1';
+  function markDirty(){ dirty=true; localStorage.setItem(DIRTY_KEY,'1'); updateBanner(); }
+  function markClean(){ dirty=false; localStorage.removeItem(DIRTY_KEY); updateBanner(); }
+  function updateBanner(){ const b=document.getElementById('backup-banner'); if(b) b.classList.toggle('visible',dirty); }
+  window.addEventListener('beforeunload',function(e){ if(dirty){const msg='Tienes cambios sin descargar. Exporta el respaldo antes de cerrar.';e.preventDefault();e.returnValue=msg;return msg;} });
+
+  // ── localStorage helpers ───────────────────────────────
+  function loadState(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{};}catch(e){return{};} }
+  function saveState(s){ localStorage.setItem(LS_KEY,JSON.stringify(s)); markDirty(); }
+  function huState(id){ const s=loadState(); if(!s[id])s[id]={status:'pendiente',feedback:'',answers:{},pert:{},risks:{}}; return s[id]; }
+  function loadEvm(){ try{const r=JSON.parse(localStorage.getItem(EVM_KEY)||'{}');r.snapshots=r.snapshots||[];r.per_hu=r.per_hu||{};return r;}catch(e){return{snapshots:[],per_hu:{}}; } }
+  function saveEvm(e){ localStorage.setItem(EVM_KEY,JSON.stringify(e)); markDirty(); }
+  function updateHu(id,patch){ const s=loadState(); s[id]=Object.assign({status:'pendiente',feedback:'',answers:{},pert:{},risks:{}},s[id]||{},patch); saveState(s); }
+
+  // ── Utils ──────────────────────────────────────────────
+  function ragClass(cal){ if(cal>=4.5)return'badge-green'; if(cal>=3.5)return'badge-orange'; if(cal>=2.5)return'badge-amber'; return'badge-red'; }
+  function nivelLabel(cal){ if(cal>=4.5)return'Excelente'; if(cal>=3.5)return'Buena'; if(cal>=2.5)return'Aceptable'; if(cal>=1.5)return'Deficiente'; return'Crítica'; }
+  function nivelColor(cal){ if(cal>=4.5)return'#16A34A'; if(cal>=3.5)return'#FF7E08'; if(cal>=2.5)return'#D97706'; return'#DC2626'; }
+  function statusBadge(st){ if(st==='aprobada')return'<span class="badge badge-green">✓ Aprobada</span>'; if(st==='rechazada')return'<span class="badge badge-red">✗ Rechazada</span>'; return'<span class="badge badge-gray">Pendiente</span>'; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function fmtH(n){ return(isFinite(n)?n:0).toFixed(1)+' h'; }
+  function fmtNum(n,d){ return(isFinite(n)?n:0).toFixed(d==null?2:d); }
+  function isEmpty(){ return !D||!D.historias||!Array.isArray(D.historias)||D.historias.length===0; }
+  function gherkinFmt(g){
+    const kw=/^(Dado|Dada|Given|Cuando|When|Entonces|Then|Y|And|Pero|But|Escenario|Scenario|Esquema del escenario|Scenario Outline|Ejemplos|Examples|Característica|Feature)\b/;
+    return esc(g).split('\n').map(l=>{ const m=l.match(kw); return m?l.replace(m[0],'<span class="kw">'+esc(m[0])+'</span>'):esc(l); }).join('<br>');
+  }
+
+  // ── Estimation helpers ─────────────────────────────────
+  function buildDistFromTareas(tareas,pertState){
+    const dist={};
+    (tareas||[]).forEach(t=>{ const up=(pertState||{})[t.tarea_id]||{}; const o=up.o!=null?+up.o:(t.estimacion_o||0); const p=up.p!=null?+up.p:(t.estimacion_p||0); const pe=up.pe!=null?+up.pe:(t.estimacion_pe||0); const e=(o+4*p+pe)/6; const tp=t.tipo||'DEV'; dist[tp]=(dist[tp]||0)+e; });
+    return dist;
+  }
+  function renderEstPills(dist){ return ['DEV','FE','QA','DB','DEVOPS','UX'].filter(tp=>(dist[tp]||0)>0).map(tp=>'<span class="est-pill est-pill-'+tp+'">'+tp+' '+dist[tp].toFixed(1)+'h</span>').join(''); }
+  function renderEstBar(dist,total){ return '<div class="est-bar"><span class="est-total">'+parseFloat(total||0).toFixed(1)+' h</span>'+renderEstPills(dist)+'</div>'; }
+  let _estCollapseIdx=0;
+  function renderEstCollapsible(dist,total,sprintLevel){
+    const pills=renderEstPills(dist);
+    const id='ec-'+(++_estCollapseIdx);
+    const totalStr=parseFloat(total||0).toFixed(1)+' h';
+    if(!pills) return '<span class="est-total">'+totalStr+'</span>';
+    const hint=sprintLevel
+      ? '<div class="est-sprint-hint">💡 Entra a <strong>Revisar HU</strong> en la tabla para ver el desglose por tarea y ajustar las estimaciones O/P/Pe si es necesario.</div>'
+      : '';
+    return '<div class="est-collapse" id="'+id+'">'+
+      '<div class="est-collapse-header">'+
+        '<span class="est-total">'+totalStr+'</span>'+
+        '<button class="est-toggle-btn" onclick="(function(b){var c=b.closest(\'.est-collapse\');c.classList.toggle(\'open\');b.textContent=c.classList.contains(\'open\')?\'▴ ocultar\':\'▾ por rol\';})(this)" aria-label="Ver desglose por rol">▾ por rol</button>'+
+      '</div>'+
+      '<div class="est-collapse-body">'+pills+'</div>'+
+      hint+
+    '</div>';
+  }
+  function sprintDistFromHistorias(hs){ const dist={}; (hs||[]).forEach(h=>{ Object.entries(h.distribucion_por_tipo||{}).forEach(([k,v])=>dist[k]=(dist[k]||0)+v); }); return dist; }
+
+  // ── RISICAR helpers ────────────────────────────────────
+  function risicarNivel(g,p){ const val=(g||1)*(p||1); let label,cls; if(val<=4){label='Tolerable';cls='nivel-tolerable';}else if(val<=9){label='Grave';cls='nivel-grave';}else if(val<=14){label='Crítico';cls='nivel-critico';}else{label='Inaceptable';cls='nivel-inaceptable';} return{val,label,cls}; }
+  function computeActiveCriticalRisks(){
+    const state=loadState(); let count=0;
+    (D.historias||[]).forEach(h=>{
+      (h.riesgos||[]).forEach(r=>{
+        const rs=((state[h.hu_id]||{}).risks||{})[r.riesgo_id]||{};
+        const cerrado=rs.cerrado!=null?rs.cerrado:(r.estado===1);
+        if(cerrado)return;
+        const g=rs.gravedad!=null?+rs.gravedad:(r.gravedad||1);
+        const p=rs.probabilidad_riesgo!=null?+rs.probabilidad_riesgo:(r.probabilidad_riesgo||1);
+        if(g*p>=10)count++;
+      });
+    });
+    return count;
+  }
+  function updateCriticalRisksKpi(){
+    const count=computeActiveCriticalRisks();
+    const grid=document.getElementById('kpi-grid'); if(!grid)return;
+    grid.querySelectorAll('.hkpi').forEach(card=>{
+      if(card.dataset.kpiLabel==='Riesgos críticos'){
+        card.querySelector('.hkpi-value').textContent=count;
+        card.dataset.kpiValue=String(count);
+        card.className='hkpi'+(count>0?' hkpi-red':'');
+      }
+    });
+  }
+  function downloadAllHusSummary(){
+    const historias=D.historias||[];
+    const lines=['# Historias Refinadas — '+SPRINT_ID,'','> Generado: '+new Date().toISOString(),'> Todas las HUs aprobadas',''];
+    historias.forEach(h=>{
+      lines.push('---');
+      lines.push('## '+h.hu_id+' — '+(h.titulo_mejorado||h.titulo_original||''));
+      lines.push('');
+      lines.push('**Estimación total:** '+(h.estimacion_total_horas||0).toFixed(1)+' horas');
+      lines.push('');
+      lines.push('**Narrativa:**');
+      lines.push('Como '+((h.narrativa_refinada||{}).rol||'')+', quiero '+((h.narrativa_refinada||{}).accion||'')+', para '+((h.narrativa_refinada||{}).beneficio||'')+'.');
+      lines.push('');
+      lines.push('**Criterios de Aceptación:**');
+      (h.criteriosAceptacion||[]).forEach(ca=>lines.push('- **'+ca.escenario_id+'** ('+ca.tipo+'): '+ca.nombre));
+      lines.push('');
+      lines.push('**Riesgos principales:**');
+      const topR=(h.riesgos||[]).filter(r=>(+r.nivel_riesgo_valor||((+r.gravedad||1)*(+r.probabilidad_riesgo||1)))>=10).slice(0,3);
+      if(topR.length) topR.forEach(r=>lines.push('- ['+r.riesgo_id+'] '+r.tipologia+': '+r.descripcion+' (Nivel: '+r.nivel_riesgo_label+')'));
+      else lines.push('- Sin riesgos Críticos/Inaceptables.');
+      lines.push('');
+      lines.push('**Dependencias:**');
+      if((h.dependencias||[]).length) h.dependencias.forEach(d=>lines.push('- '+d.tipo+(d.bloqueante?' [BLOQUEANTE]':'')+': '+d.referencia+' — '+d.descripcion));
+      else lines.push('- Sin dependencias.');
+      lines.push('');
+    });
+    download(SPRINT_ID+'-historias-refinadas-'+new Date().toISOString().slice(0,10)+'.md',lines.join('\n'),'text/markdown');
+    flash('Historias refinadas descargadas ✓');
+  }
+  function renderRisicarCards(riesgos,riskState,huId){
+    if(!(riesgos||[]).length)return'<p style="color:var(--color-text-muted)">Sin riesgos registrados.</p>';
+    const gL=['','Insignificante','Menor','Moderada','Mayor','Catastrófica'];
+    const pL=['','Muy baja','Baja','Media','Alta','Muy alta'];
+    return riesgos.map(r=>{
+      const rs=(riskState||{})[r.riesgo_id]||{};
+      const g=rs.gravedad!=null?+rs.gravedad:(r.gravedad||3);
+      const p=rs.probabilidad_riesgo!=null?+rs.probabilidad_riesgo:(r.probabilidad_riesgo||3);
+      const cerrado=rs.cerrado!=null?!!rs.cerrado:(r.estado===1);
+      const nivel=risicarNivel(g,p);
+      const sevOpt=[1,2,3,4,5].map(v=>'<option value="'+v+'"'+(g===v?' selected':'')+'>'+v+' — '+gL[v]+'</option>').join('');
+      const probOpt=[1,2,3,4,5].map(v=>'<option value="'+v+'"'+(p===v?' selected':'')+'>'+v+' — '+pL[v]+'</option>').join('');
+      return'<div class="risicar-card'+(cerrado?' cerrado':'')+'" data-risk-id="'+esc(r.riesgo_id)+'" data-hu-id="'+esc(huId)+'">'+
+        '<div class="risicar-head"><span class="hu-id">'+esc(r.riesgo_id)+'</span><span class="risicar-tipologia">'+esc(r.tipologia||r.categoria||'—')+'</span><span class="risicar-desc">'+esc(r.descripcion)+'</span>'+
+        '<div class="risk-switch-wrap"><input type="checkbox" class="risk-toggle" data-risk-id="'+esc(r.riesgo_id)+'" data-hu-id="'+esc(huId)+'"'+(cerrado?' checked':'')+' aria-label="Cerrar riesgo"><label style="font-size:.74rem;color:var(--color-text-muted)">'+(cerrado?'Cerrado':'Abierto')+'</label></div></div>'+
+        '<div class="risicar-details">'+
+          (r.ambito?'<div><strong>Ámbito:</strong> '+esc(r.ambito)+'</div>':'')+
+          (r.agente_generador?'<div><strong>Agente:</strong> '+esc(r.agente_generador)+'</div>':'')+
+          '<div><strong>Causa:</strong> '+esc(r.causa||'—')+'</div>'+
+          '<div><strong>Consecuencia:</strong> '+esc(r.consecuencia||'—')+'</div>'+
+          (r.impacto_financiero?'<div><strong>Impacto $:</strong> '+esc(r.impacto_financiero)+'</div>':'')+
+          '<div><strong>Estrategia:</strong> '+esc(r.estrategia_respuesta||'—')+'</div>'+
+          '<div><strong>Mitigación:</strong> '+esc(r.mitigacion||'—')+'</div>'+
+          (r.responsable?'<div><strong>Responsable:</strong> '+esc(r.responsable)+'</div>':'')+
+        '</div>'+
+        '<div class="risicar-metrics">'+
+          '<label>Gravedad <span class="ux-tip" data-tip="1=Insignificante · 2=Menor · 3=Moderada · 4=Mayor · 5=Catastrófica">?</span>'+
+            '<select class="risk-select" data-risk-id="'+esc(r.riesgo_id)+'" data-hu-id="'+esc(huId)+'" data-field="gravedad">'+sevOpt+'</select></label>'+
+          '<span style="color:var(--color-text-muted);font-weight:700">×</span>'+
+          '<label>Probabilidad <span class="ux-tip" data-tip="1=Muy baja · 2=Baja · 3=Media · 4=Alta · 5=Muy alta">?</span>'+
+            '<select class="risk-select" data-risk-id="'+esc(r.riesgo_id)+'" data-hu-id="'+esc(huId)+'" data-field="probabilidad_riesgo">'+probOpt+'</select></label>'+
+          '<span style="color:var(--color-text-muted);font-weight:700">=</span>'+
+          '<span class="nivel-chip '+nivel.cls+'" data-nivel="'+esc(r.riesgo_id)+'">'+nivel.val+' — '+nivel.label+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+  }
+
+  // ── JS Tooltip ─────────────────────────────────────────
+  (function initTooltips(){
+    const el = document.getElementById('js-tooltip');
+    if(!el) return;
+    let hideTimer;
+    document.addEventListener('mouseover', e=>{
+      const tip = e.target.closest('[data-tip]');
+      if(!tip){el.style.opacity='0';return;}
+      clearTimeout(hideTimer);
+      el.textContent = tip.getAttribute('data-tip');
+      el.style.opacity='1';
+      const r = tip.getBoundingClientRect();
+      let left = r.left + r.width/2;
+      let bottom = window.innerHeight - r.top + 10;
+      el.style.transform='translateX(-50%)';
+      el.style.left=left+'px';
+      el.style.bottom=bottom+'px';
+      el.style.top='';
+      // boundary fix
+      requestAnimationFrame(()=>{
+        const er=el.getBoundingClientRect();
+        if(er.left<8){el.style.left=(left-(er.left-8))+'px';}
+        if(er.right>window.innerWidth-8){el.style.left=(left-(er.right-(window.innerWidth-8)))+'px';}
+        if(er.top<8){el.style.bottom='';el.style.top=(r.bottom+8)+'px';}
+      });
+    });
+    document.addEventListener('mouseout', e=>{
+      if(e.target.closest('[data-tip]')) hideTimer=setTimeout(()=>{el.style.opacity='0';},80);
+    });
+  })();
+
+  // ── Floating guide panel ───────────────────────────────
+  const GUIDE_CONTENT = {
+    dashboard: {
+      title:'¿Qué hacer en el Dashboard?',
+      items:[
+        '<strong>Portada del sprint</strong> — revisa los KPIs clave. Haz clic en cada métrica para ver su explicación detallada.',
+        '<strong>Gauges de diagnóstico</strong> — porcentaje de cumplimiento por norma: ISO 29148, INVEST, ISO 25010.',
+        '<strong>Resumen de diagnóstico</strong> — distribución de HUs por nivel de calidad.',
+        '<strong>Tabla de HUs</strong> — haz clic en <em>Revisar HU</em> para abrir el Focus Mode y dejar feedback, responder preguntas HITL y ajustar estimaciones PERT.',
+        '<strong>Aprobar / Rechazar</strong> — cuando el 100% esté aprobado se desbloquea la línea base EVM.',
+        '<strong>Respaldo</strong> — exporta el Markdown periódicamente. El estado vive en localStorage y se pierde si limpias el navegador.'
+      ]
+    },
+    progress: {
+      title:'¿Qué hacer en Avance del Sprint?',
+      items:[
+        '<strong>EVM</strong> — edita PV, EV y AC por HU. CV, SV, CPI, SPI, EAC, ETC, VAC y TCPI se calculan automáticamente.',
+        '<strong>Registrar medición</strong> — guarda un snapshot al cierre de cada día o mínimo 2 veces/semana.',
+        '<strong>Cronograma</strong> — Gantt de ruta crítica. Declara las fechas del sprint para ver el calendario real.',
+        '<strong>Riesgos</strong> — radar RISICAR del sprint. Los riesgos Crítico/Inaceptable requieren acción inmediata.',
+        '<strong>Bitácora PMO</strong> — usa el botón al final de la sección EVM para generar automáticamente el informe semanal en formato .md.'
+      ]
+    }
+  };
+  let guideOpen = false;
+  let currentView = 'dashboard';
+  function openGuide(view){
+    const panel=document.getElementById('guide-panel');
+    const body=document.getElementById('guide-panel-body');
+    const title=document.getElementById('guide-panel-title');
+    const g=GUIDE_CONTENT[view]||GUIDE_CONTENT.dashboard;
+    title.textContent=g.title;
+    body.innerHTML=g.items.map(i=>'<li>'+i+'</li>').join('');
+    panel.classList.add('open');
+    guideOpen=true;
+  }
+  function closeGuide(){
+    document.getElementById('guide-panel').classList.remove('open');
+    guideOpen=false;
+  }
+  document.getElementById('guide-float-btn').addEventListener('click',()=>{ if(guideOpen)closeGuide(); else openGuide(currentView); });
+  document.getElementById('guide-panel-close').addEventListener('click',closeGuide);
+
+  // ── Metric modal ───────────────────────────────────────
+  const METRIC_INFO = {
+    'Total HUs':         {desc:'Número total de Historias de Usuario analizadas en este sprint por los agentes de Requirement Refinator.'},
+    'Progreso revisión': {desc:'Fórmula: (Aprobadas + Rechazadas) ÷ Total HUs × 100. El 100% indica que todas las HUs han sido revisadas por el PM, lo que NO significa que todas estén aprobadas — puede haber algunas rechazadas pendientes de re-análisis. Cuando llega al 100% se desbloquea la línea base EVM para iniciar el seguimiento del Valor Ganado.'},
+    'Diagnóstico':       {desc:'Calificación de calidad ponderada 0–5. Fórmula: ISO 29148 × 50% + INVEST × 30% + ISO 25010 × 20%. Rangos: Excelente ≥4.5 · Buena ≥3.5 · Aceptable ≥2.5 · Deficiente ≥1.5 · Crítica <1.5.'},
+    'Horas estimadas':   {desc:'Suma de las estimaciones PERT de todas las tareas de todas las HUs. Fórmula PERT: E = (O + 4P + Pe) / 6, donde O=Optimista, P=Probable, Pe=Pesimista.'},
+    'Riesgos críticos':  {desc:'Número de riesgos con nivel RISICAR Crítico (10–14) o Inaceptable (15–25). Nivel = Gravedad × Probabilidad. Requieren plan de mitigación activo.'},
+    'Preguntas HITL':    {desc:'Total de preguntas de clarificación generadas por los agentes para resolver ambigüedades. Deben responderse con el PO antes de iniciar desarrollo.'}
+  };
+  function openMetricModal(label,value,hint){
+    const info=METRIC_INFO[label]||{desc:'Sin información adicional disponible.'};
+    const modal=document.getElementById('metric-modal');
+    document.getElementById('metric-modal-tag').textContent='Métrica del sprint';
+    document.getElementById('metric-modal-title').textContent=label;
+    document.getElementById('metric-modal-value').textContent=value;
+    document.getElementById('metric-modal-desc').innerHTML=
+      '<p>'+info.desc+'</p>'+
+      (hint?'<p style="margin-top:.6rem;font-size:.78rem;color:var(--rr-orange)">'+esc(hint)+'</p>':'');
+    modal.classList.remove('hidden');
+  }
+  document.getElementById('metric-modal-close').addEventListener('click',()=>document.getElementById('metric-modal').classList.add('hidden'));
+  document.getElementById('metric-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)e.currentTarget.classList.add('hidden');});
+
+  // ── Empty state ────────────────────────────────────────
+  function renderEmpty(){
+    const callouts=document.getElementById('empty-callouts');
+    const found=document.getElementById('empty-found');
+    const items=[];
+    if(!D||!D.historias||!D.historias.length)items.push({lvl:'red',h:'No se encontraron Historias de Usuario',p:'La carpeta <code>docs/HUs/'+SPRINT_ID+'/</code> está vacía o no existe.'});
+    if(!D||!D.config||!D.config.proyecto_nombre)items.push({lvl:'amber',h:'Falta contexto del proyecto',p:'Completa <code>docs/contexto/</code>.'});
+    callouts.innerHTML=items.map(i=>'<div class="callout callout-'+i.lvl+'"><h3>'+i.h+'</h3><p>'+i.p+'</p></div>').join('');
+    const fnd=[];
+    if(D&&D.config&&D.config.proyecto_nombre)fnd.push('✅ Proyecto: <code>'+esc(D.config.proyecto_nombre)+'</code>');
+    if(!fnd.length)fnd.push('<span style="color:var(--color-text-muted)">Ningún insumo cargado todavía.</span>');
+    found.innerHTML=fnd.map(f=>'<li style="padding:.4rem 0;border-bottom:1px solid var(--color-border)">'+f+'</li>').join('');
+  }
+
+  // ── Dashboard ──────────────────────────────────────────
+  function renderDashboard(){
+    _estCollapseIdx=0;
+    const m=D.metricas_sprint||{};
+    const proyNombre=(D.config&&D.config.proyecto_nombre)||SPRINT_ID;
+    document.getElementById('dash-title').innerHTML='Dashboard del <span>'+esc(SPRINT_ID)+'</span>';
+    document.getElementById('dash-sub').textContent=proyNombre;
+    document.getElementById('header-sprint-sub').textContent=(proyNombre!==SPRINT_ID?proyNombre+' · ':'')+SPRINT_ID;
+    const historias=D.historias||[];
+    const state=loadState();
+    let aprobadas=0,rechazadas=0,pendientes=0;
+    historias.forEach(h=>{ const st=(state[h.hu_id]||{}).status||'pendiente'; if(st==='aprobada')aprobadas++; else if(st==='rechazada')rechazadas++; else pendientes++; });
+    const pctRevisadas=historias.length?Math.round(((aprobadas+rechazadas)/historias.length)*100):0;
+    const cal=m.calificacion_iso_promedio||0;
+
+    // Hero score badge
+    document.getElementById('dash-score-badge').innerHTML=
+      '<div style="text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-lg);padding:var(--space-4) var(--space-5)">'+
+      '<div style="font-size:.62rem;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:.2rem">Diagnóstico promedio</div>'+
+      '<div style="font-family:var(--font-display);font-size:3rem;font-weight:700;color:'+nivelColor(cal)+';line-height:1">'+cal.toFixed(2)+'</div>'+
+      '<div style="font-size:.8rem;color:rgba(255,255,255,.35);margin-top:.15rem">/ 5.0 · '+nivelLabel(cal)+'</div>'+
+      '</div>';
+
+    const kpis=[
+      {label:'Total HUs',        value:historias.length, hint:SPRINT_ID,                          tip:'Historias analizadas en este sprint.', cls:''},
+      {label:'Progreso revisión',value:pctRevisadas+'%', hint:aprobadas+'✓ · '+rechazadas+'✗ · '+pendientes+'⏳', tip:'(Aprobadas + Rechazadas) ÷ Total. El 100% indica que todas las HUs fueron revisadas por el PM — no significa que todas estén aprobadas. Al llegar a 100% se desbloquea la línea base EVM.', cls:pctRevisadas===100?'hkpi-green':pctRevisadas>=50?'hkpi-amber':''},
+      {label:'Diagnóstico',      value:cal.toFixed(2)+' / 5', hint:'ISO 29148·50% + INVEST·30% + 25010·20%', tip:'Calificación de calidad promedio del sprint (0–5).', cls:''},
+      {label:'Horas estimadas',  value:(m.total_horas||0).toFixed(0)+' h', hint:(m.total_tareas||0)+' tareas PERT', tip:'Suma de estimaciones PERT (E=(O+4P+Pe)/6) de todas las tareas.', cls:''},
+      {label:'Riesgos críticos', value:m.total_riesgos_criticos||0, hint:'Crítico + Inaceptable (RISICAR)', tip:'Riesgos RISICAR nivel ≥10. Requieren mitigación activa.', cls:(m.total_riesgos_criticos||0)>0?'hkpi-red':''},
+      {label:'Preguntas HITL',   value:m.total_preguntas||0, hint:'para aclarar con el PO', tip:'Preguntas de clarificación abiertas.', cls:''}
+    ];
+    document.getElementById('kpi-grid').innerHTML=kpis.map(k=>
+      '<div class="hkpi '+k.cls+'" data-kpi-label="'+esc(k.label)+'" data-kpi-value="'+esc(k.value)+'" data-kpi-hint="'+esc(k.hint)+'">'+
+        '<div class="hkpi-label">'+esc(k.label)+' <span class="ux-tip" data-tip="'+esc(k.tip)+'">?</span></div>'+
+        '<div class="hkpi-value">'+k.value+'</div>'+
+        '<div class="hkpi-hint">'+k.hint+'</div>'+
+      '</div>'
+    ).join('');
+    document.querySelectorAll('.hkpi').forEach(el=>{
+      el.addEventListener('click',()=> openMetricModal(el.dataset.kpiLabel,el.dataset.kpiValue,el.dataset.kpiHint));
+    });
+
+    const gauges=[
+      {label:'ISO/IEC 29148 (50%)', value:(m.iso29148_avg||0).toFixed(1)+'%', pct:m.iso29148_avg||0, tip:'Cumplimiento promedio de los 9 atributos ISO 29148.'},
+      {label:'INVEST (30%)',         value:(m.invest_avg||0).toFixed(1)+'%', pct:m.invest_avg||0, tip:'Independiente, Negociable, Valuable, Estimable, Small, Testeable.'},
+      {label:'ISO/IEC 25010 (20%)',  value:(m.iso25010_avg||0).toFixed(1)+'%', pct:m.iso25010_avg||0, tip:'Cobertura de las 8 características de calidad del producto.'}
+    ];
+    document.getElementById('gauges-grid').innerHTML=gauges.map(g=>
+      '<div class="gauge"><div class="gauge-label">'+g.label+' <span class="ux-tip" data-tip="'+esc(g.tip)+'">?</span></div><div class="gauge-value">'+g.value+'</div><div class="gauge-bar"><div class="gauge-fill" style="width:'+Math.min(100,g.pct)+'%"></div></div></div>'
+    ).join('');
+
+    // Sprint summary — distribution + effort
+    const dist={Excelente:0,Buena:0,Aceptable:0,Deficiente:0,Crítica:0};
+    historias.forEach(h=>{ const n=nivelLabel(h.calificacion_iso||0); dist[n]=(dist[n]||0)+1; });
+    const spDist=sprintDistFromHistorias(historias);
+    const spTotal=m.total_horas||0;
+    const levelColors={Excelente:'#16A34A',Buena:'#FF7E08',Aceptable:'#D97706',Deficiente:'#DC2626',Crítica:'#7F1D1D'};
+    document.getElementById('sprint-summary-content').innerHTML=
+      '<div class="diag-dist">'+
+        Object.entries(dist).filter(([,n])=>n>0).map(([lbl,n])=>
+          '<div class="diag-level"><span class="diag-dot" style="background:'+levelColors[lbl]+'"></span><span>'+lbl+'</span><span class="diag-count">'+n+'</span></div>'
+        ).join('')+
+      '</div>'+
+      '<div style="margin-top:var(--space-3)">'+renderEstCollapsible(spDist,spTotal,true)+'</div>';
+
+    // HU table
+    const tbody=document.querySelector('#hu-table tbody');
+    tbody.innerHTML=historias.map(h=>{
+      const st=(state[h.hu_id]||{}).status||'pendiente';
+      const dist=h.distribucion_por_tipo||{};
+      return'<tr>'+
+        '<td><span class="hu-id">'+esc(h.hu_id)+'</span></td>'+
+        '<td><div class="hu-title">'+esc(h.titulo_mejorado||h.titulo_original||h.hu_id)+'</div></td>'+
+        '<td><span class="badge '+ragClass(h.calificacion_iso)+'">'+h.calificacion_iso.toFixed(1)+' / 5</span></td>'+
+        '<td>'+nivelLabel(h.calificacion_iso)+'</td>'+
+        '<td>'+renderEstCollapsible(dist,h.estimacion_total_horas||0,false)+'</td>'+
+        '<td>'+statusBadge(st)+'</td>'+
+        '<td><button class="btn btn-primary btn-sm" data-review="'+esc(h.hu_id)+'">Revisar HU</button></td>'+
+      '</tr>';
+    }).join('');
+    tbody.querySelectorAll('button[data-review]').forEach(btn=>{
+      btn.addEventListener('click',()=> showHuModal(btn.dataset.review));
+    });
+  }
+
+  // ── HU MODAL (Focus Mode) ──────────────────────────────
+  let currentHuId = null;
+  function showHuModal(huId){
+    const h=(D.historias||[]).find(x=>x.hu_id===huId);
+    if(!h) return;
+    currentHuId = huId;
+    const st=huState(huId);
+    document.getElementById('hu-modal-title').textContent=h.titulo_mejorado||h.titulo_original||h.hu_id;
+    document.getElementById('hu-modal-meta').innerHTML=
+      '<div class="detail-meta">'+
+        '<span class="badge '+ragClass(h.calificacion_iso)+'">Diagnóstico '+h.calificacion_iso.toFixed(1)+' / 5 · '+nivelLabel(h.calificacion_iso)+'</span>'+
+        '<span class="badge badge-orange">'+(h.tareas||[]).length+' tareas · '+(h.estimacion_total_horas||0).toFixed(1)+' h</span>'+
+        '<span class="hu-id">'+esc(h.hu_id)+'</span>'+
+        (h.arquetipo_usuario?'<span style="font-size:.78rem;color:var(--color-text-muted)">'+esc(h.arquetipo_usuario)+'</span>':'')+
+      '</div>';
+
+    // CAs
+    const caHtml=(h.criteriosAceptacion||[]).map(ca=>{
+      const checks=ca.iso29148_checks||{};
+      const okKeys=Object.keys(checks).filter(k=>checks[k]);
+      return'<div class="scenario">'+
+        '<div class="scenario-head"><div><div class="scenario-title">'+esc(ca.escenario_id||'')+' · '+esc(ca.nombre||'')+'</div><div class="scenario-meta">Tipo: '+esc(ca.tipo||'')+' · CA: '+esc(ca.ca_original_referenciado||'—')+'</div></div>'+
+        '<div>'+okKeys.map(k=>'<span class="badge badge-green" style="margin-left:2px">'+esc(k)+'</span>').join('')+'</div></div>'+
+        '<div class="gherkin">'+gherkinFmt(ca.gherkin||'')+'</div></div>';
+    }).join('')||'<p style="color:var(--color-text-muted)">Sin escenarios.</p>';
+
+    // Tasks
+    const distFromTareas=buildDistFromTareas(h.tareas,st.pert);
+    const totalEHU=Object.values(distFromTareas).reduce((a,b)=>a+b,0);
+    const taskHtml=
+      '<div class="est-dist-card"><h3>Distribución de esfuerzo</h3>'+renderEstBar(distFromTareas,totalEHU)+'</div>'+
+      '<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>ID</th><th>Descripción / DoD</th><th>Tipo</th><th>Compl.</th>'+
+      '<th>O <span class="ux-tip" data-tip="Optimista: tiempo mínimo.">?</span></th>'+
+      '<th>P <span class="ux-tip" data-tip="Probable: tiempo más realista.">?</span></th>'+
+      '<th>Pe <span class="ux-tip" data-tip="Pesimista: tiempo máximo.">?</span></th>'+
+      '<th>E <span class="ux-tip" data-tip="PERT = (O + 4P + Pe) / 6. Se recalcula al editar.">?</span></th>'+
+      '</tr></thead><tbody>'+
+      (h.tareas||[]).map(t=>{
+        const up=st.pert[t.tarea_id]||{};
+        const o=up.o!=null?up.o:t.estimacion_o;
+        const p=up.p!=null?up.p:t.estimacion_p;
+        const pe=up.pe!=null?up.pe:t.estimacion_pe;
+        const e=((+o)+4*(+p)+(+pe))/6;
+        return'<tr>'+
+          '<td><span class="hu-id">'+esc(t.tarea_id)+'</span></td>'+
+          '<td><div style="font-weight:600">'+esc(t.descripcion)+'</div><div style="color:var(--color-text-muted);font-size:.76rem;margin-top:.15rem">DoD: '+esc(t.dod)+'</div></td>'+
+          '<td><span class="badge badge-gray">'+esc(t.tipo)+'</span></td>'+
+          '<td style="font-size:.78rem">'+esc(t.complejidad||'')+'</td>'+
+          '<td><input type="number" step="0.5" min="0.5" max="40" class="pert-input" data-pert="o" data-tid="'+esc(t.tarea_id)+'" value="'+o+'"></td>'+
+          '<td><input type="number" step="0.5" min="0.5" max="40" class="pert-input" data-pert="p" data-tid="'+esc(t.tarea_id)+'" value="'+p+'"></td>'+
+          '<td><input type="number" step="0.5" min="0.5" max="40" class="pert-input" data-pert="pe" data-tid="'+esc(t.tarea_id)+'" value="'+pe+'"></td>'+
+          '<td class="pert-e" data-e-tid="'+esc(t.tarea_id)+'">'+e.toFixed(2)+' h</td>'+
+        '</tr>';
+      }).join('')+
+      '</tbody><tfoot><tr>'+
+        '<td colspan="4" style="text-align:right">TOTAL</td>'+
+        '<td>'+((h.tareas||[]).reduce((a,t)=>{const up=st.pert[t.tarea_id]||{};return a+(up.o!=null?+up.o:t.estimacion_o||0);},0)).toFixed(1)+'</td>'+
+        '<td>'+((h.tareas||[]).reduce((a,t)=>{const up=st.pert[t.tarea_id]||{};return a+(up.p!=null?+up.p:t.estimacion_p||0);},0)).toFixed(1)+'</td>'+
+        '<td>'+((h.tareas||[]).reduce((a,t)=>{const up=st.pert[t.tarea_id]||{};return a+(up.pe!=null?+up.pe:t.estimacion_pe||0);},0)).toFixed(1)+'</td>'+
+        '<td class="pert-e">'+totalEHU.toFixed(2)+' h</td>'+
+      '</tr></tfoot></table></div>';
+
+    const depsHtml=(h.dependencias||[]).length?
+      '<ul style="list-style:none;padding:0">'+h.dependencias.map(d=>'<li style="padding:.45rem 0;border-bottom:1px solid var(--color-border)"><span class="badge '+(d.bloqueante?'badge-red':'badge-gray')+'">'+esc(d.tipo||'')+(d.bloqueante?' · bloqueante':'')+'</span> <strong>'+esc(d.referencia||'')+'</strong> — '+esc(d.descripcion||'')+'</li>').join('')+'</ul>'
+      :'<p style="color:var(--color-text-muted)">Sin dependencias.</p>';
+
+    const preguntasHtml=(h.preguntas_clarificacion||[]).length?
+      h.preguntas_clarificacion.map(q=>{
+        const ans=st.answers[q.id]||'';
+        return'<div class="hitl-question"><div class="q-text">'+esc(q.pregunta)+'</div><div class="q-meta">'+esc(q.categoria||'')+' · Impacto: '+esc(q.impacto||'')+'</div><textarea data-answer="'+esc(q.id)+'" placeholder="Respuesta del PM / PO…">'+esc(ans)+'</textarea></div>';
+      }).join('')
+      :'<p style="color:var(--color-text-muted)">Sin preguntas de clarificación.</p>';
+
+    document.getElementById('hu-modal-body').innerHTML=
+      '<div style="display:flex;justify-content:flex-end;margin-bottom:var(--space-3);gap:.5rem">'+
+        '<button class="btn btn-ghost btn-sm" id="btn-expand-all" aria-label="Expandir todos los paneles">↕ Expandir todo</button>'+
+        '<button class="btn btn-ghost btn-sm" id="btn-collapse-all" aria-label="Contraer todos los paneles">↕ Contraer todo</button>'+
+      '</div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Narrativa y Criterios Originales</h3><span class="panel-toggle">▾</span></div><div class="panel-body">'+
+        '<p style="font-size:.92rem;margin-bottom:var(--space-3)"><strong>Como</strong> '+esc((h.narrativa_refinada||{}).rol||'')+', <strong>quiero</strong> '+esc((h.narrativa_refinada||{}).accion||'')+', <strong>para</strong> '+esc((h.narrativa_refinada||{}).beneficio||'')+'.</p>'+
+        '<h4 style="font-size:.74rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem">Criterios originales del documento fuente</h4>'+
+        '<ol style="padding-left:1.2rem;font-size:.86rem">'+(h.criteriosOriginales||[]).map(c=>'<li style="margin-bottom:.25rem">'+esc(c)+'</li>').join('')+'</ol>'+
+      '</div></div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Criterios de Aceptación — Gherkin ('+(h.criteriosAceptacion||[]).length+')</h3><span class="panel-toggle">▾</span></div><div class="panel-body">'+caHtml+'</div></div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Tareas Técnicas — PERT editable ('+(h.tareas||[]).length+')</h3><span class="panel-toggle">▾</span></div><div class="panel-body">'+taskHtml+'</div></div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Riesgos ('+(h.riesgos||[]).length+')</h3><span class="panel-toggle">▾</span></div><div class="panel-body">'+renderRisicarCards(h.riesgos||[],st.risks||{},huId)+'</div></div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Dependencias ('+(h.dependencias||[]).length+')</h3><span class="panel-toggle">▾</span></div><div class="panel-body">'+depsHtml+'</div></div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Preguntas de Clarificación — HITL ('+(h.preguntas_clarificacion||[]).length+')</h3><span class="panel-toggle">▾</span></div><div class="panel-body">'+preguntasHtml+'</div></div>'+
+      '<div class="panel collapsed"><div class="panel-head"><h3>Comentarios / Observaciones adicionales sobre la HU</h3><span class="panel-toggle">▾</span></div><div class="panel-body"><textarea class="feedback-box" id="detail-feedback" placeholder="Observaciones, cambios solicitados, notas adicionales sobre esta HU…">'+esc(st.feedback||'')+'</textarea></div></div>';
+
+    // Wire up modal body interactions
+    const body=document.getElementById('hu-modal-body');
+    body.querySelectorAll('.panel-head').forEach(ph=>ph.addEventListener('click',()=>ph.parentElement.classList.toggle('collapsed')));
+    const btnExpAll=body.querySelector('#btn-expand-all');
+    const btnColAll=body.querySelector('#btn-collapse-all');
+    if(btnExpAll) btnExpAll.addEventListener('click',()=>body.querySelectorAll('.panel').forEach(p=>p.classList.remove('collapsed')));
+    if(btnColAll) btnColAll.addEventListener('click',()=>body.querySelectorAll('.panel').forEach(p=>p.classList.add('collapsed')));
+    body.querySelectorAll('.pert-input').forEach(inp=>{
+      inp.addEventListener('input',()=>{
+        const tid=inp.dataset.tid; const key=inp.dataset.pert;
+        const s=huState(huId); s.pert[tid]=s.pert[tid]||{}; s.pert[tid][key]=parseFloat(inp.value)||0;
+        updateHu(huId,{pert:s.pert});
+        const row=inp.closest('tr');
+        const o=parseFloat(row.querySelector('[data-pert=o]').value)||0;
+        const p=parseFloat(row.querySelector('[data-pert=p]').value)||0;
+        const pe=parseFloat(row.querySelector('[data-pert=pe]').value)||0;
+        row.querySelector('[data-e-tid]').textContent=((o+4*p+pe)/6).toFixed(2)+' h';
+      });
+    });
+    body.querySelectorAll('textarea[data-answer]').forEach(t=>{
+      t.addEventListener('input',()=>{ const s=huState(huId); s.answers[t.dataset.answer]=t.value; updateHu(huId,{answers:s.answers}); });
+    });
+    const fbEl=body.querySelector('#detail-feedback');
+    if(fbEl) fbEl.addEventListener('input',e=>updateHu(huId,{feedback:e.target.value}));
+    body.querySelectorAll('.risk-select').forEach(sel=>{
+      sel.addEventListener('change',()=>{
+        const rid=sel.dataset.riskId; const field=sel.dataset.field;
+        const s=huState(huId); s.risks[rid]=s.risks[rid]||{}; s.risks[rid][field]=+sel.value;
+        const card=sel.closest('.risicar-card');
+        const g=+(card.querySelector('[data-field=gravedad]').value||1);
+        const p=+(card.querySelector('[data-field=probabilidad_riesgo]').value||1);
+        const nivel=risicarNivel(g,p);
+        const chip=card.querySelector('[data-nivel="'+rid+'"]');
+        if(chip){chip.textContent=nivel.val+' — '+nivel.label;chip.className='nivel-chip '+nivel.cls;}
+        updateHu(huId,{risks:s.risks});
+      });
+    });
+    body.querySelectorAll('.risk-toggle').forEach(tog=>{
+      tog.addEventListener('change',()=>{
+        const rid=tog.dataset.riskId; const s=huState(huId);
+        s.risks[rid]=s.risks[rid]||{}; s.risks[rid].cerrado=tog.checked;
+        const card=tog.closest('.risicar-card');
+        if(card) card.classList.toggle('cerrado',tog.checked);
+        const lbl=tog.nextElementSibling;
+        if(lbl) lbl.textContent=tog.checked?'Cerrado':'Abierto';
+        updateHu(huId,{risks:s.risks});
+        updateCriticalRisksKpi();
+      });
+    });
+
+    // Footer buttons
+    document.getElementById('btn-save').onclick=()=>flash('Cambios guardados');
+    document.getElementById('btn-approve').onclick=()=>{
+      updateHu(huId,{status:'aprobada'});
+      flash('HU aprobada ✓');
+      closeHuModal();
+      renderDashboard();
+      const st2=loadState();
+      const allOk=(D.historias||[]).every(h=>(st2[h.hu_id]||{}).status==='aprobada');
+      if(allOk){
+        setTimeout(()=>{
+          if(confirm('🎉 ¡Todas las historias han sido aprobadas!\n\n¿Deseas descargar un archivo .md con el resumen refinado de todas las HUs?\n\nIncluye: narrativa, criterios de aceptación, riesgos principales, dependencias y estimación de horas totales (sin desglose de tareas).'))
+            downloadAllHusSummary();
+        },350);
+      }
+    };
+    document.getElementById('btn-reject').onclick=()=>{
+      updateHu(huId,{status:'rechazada'});
+      flash('HU rechazada — exporta y usa --iteracion');
+      closeHuModal();
+      renderDashboard();
+    };
+
+    document.getElementById('hu-modal').classList.remove('hidden');
+    document.body.style.overflow='hidden';
+  }
+  function closeHuModal(){
+    document.getElementById('hu-modal').classList.add('hidden');
+    document.body.style.overflow='';
+    currentHuId=null;
+  }
+  document.getElementById('hu-modal-close').addEventListener('click',closeHuModal);
+  document.getElementById('hu-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeHuModal();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){ closeHuModal(); document.getElementById('metric-modal').classList.add('hidden'); closeGuide(); }});
+
+  // ── Sprint config + baseline ───────────────────────────
+  function sprintConfig(){
+    const sc=(D&&D.sprint_config)||{};
+    const ic=(D&&D.informe_cliente)||{};
+    const sp=(ic&&ic.sprint)||{};
+    const horasDia=sc.horas_dia_persona||sp.horas_dia_persona||6;
+    const capPorRol=sc.capacidad_por_rol||null;
+    const personas=sc.equipo?sc.equipo.length:(sp.capacidad_personas||4);
+    const dias=sc.dias_habiles||sp.duracion_dias_habiles||10;
+    return{dias,personas,horasDia,capDiaria:sp.capacidad_diaria_h||(personas*horasDia),inicio:sc.fecha_inicio||sp.fecha_inicio||'Día 1',equipo:sc.equipo||null,capPorRol,fechaInicio:sc.fecha_inicio||null,fechaFin:sc.fecha_fin||null,bacHoras:sc.bac_horas||null};
+  }
+  function computeBaseline(){
+    const cfg=sprintConfig();
+    const historias=(D&&D.historias)||[];
+    const totalH=historias.reduce((a,h)=>a+(h.estimacion_total_horas||0),0);
+    const hpd=cfg.horasDia||8;
+    const baseline=historias.map(h=>{
+      const dist=h.distribucion_por_tipo||{};
+      const roleVals=Object.values(dist).filter(v=>+v>0);
+      const dias=roleVals.length?Math.max(1,Math.max(...roleVals.map(v=>Math.ceil(+v/hpd)))):Math.max(1,Math.ceil((h.estimacion_total_horas||0)/hpd));
+      const diasPorRol={};
+      Object.entries(dist).forEach(([rol,hrs])=>{if(+hrs>0)diasPorRol[rol]=Math.ceil(+hrs/hpd);});
+      return{hu_id:h.hu_id,titulo:h.titulo_mejorado||h.titulo_original||h.hu_id,horas:h.estimacion_total_horas||0,bac:(h.estimacion_total_horas||0)*HOURLY_RATE,pv:(h.estimacion_total_horas||0)*HOURLY_RATE,cal:h.calificacion_iso||0,deps:(h.dependencias||[]).map(d=>d.referencia).filter(Boolean),riesgos_alta:(h.riesgos||[]).filter(r=>(+r.nivel_riesgo_valor||0)>=10).length,dias:dias,dist:dist,diasPorRol:diasPorRol};
+    });
+    return{cfg,totalH,baseline,bac_total:totalH*HOURLY_RATE};
+  }
+
+  // ── AI Accelerator helper ──────────────────────────────
+  function aiAccel(icon,tag,title,desc,url){
+    return'<div class="ai-accel">'+
+      '<div class="ai-accel-icon">'+icon+'</div>'+
+      '<div class="ai-accel-body">'+
+        '<span class="ai-accel-tag">'+esc(tag)+'</span>'+
+        '<div class="ai-accel-title">'+esc(title)+'</div>'+
+        '<div class="ai-accel-desc">'+esc(desc)+'</div>'+
+      '</div>'+
+      '<a href="'+esc(url)+'" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="flex-shrink:0;white-space:nowrap">Abrir Acelerador IA ↗</a>'+
+    '</div>';
+  }
+
+  // ── Sub-tab wiring (with lazy render) ──────────────────
+  function initProgressSubTabs(baseline,cfgWithDates,snaps,bac_total,dates){
+    document.querySelectorAll('#progress-subtabs .sub-tab').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        document.querySelectorAll('#progress-subtabs .sub-tab').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        const sub=btn.dataset.sub;
+        document.querySelectorAll('#progress-content .sub-panel').forEach(p=>p.classList.remove('active'));
+        const panel=document.getElementById('sub-'+sub);
+        if(panel) panel.classList.add('active');
+        // Lazy render per sub-tab
+        if(sub==='gantt'&&baseline){
+          renderGantt(baseline,cfgWithDates||{});
+        }
+        if(sub==='riesgos'){
+          renderSprintRisksMatrix();
+        }
+        if(sub==='evm'){
+          // Re-render chart in case canvas was hidden
+          if(snaps&&bac_total) renderEvmChart(snaps,bac_total,cfgWithDates,dates);
+        }
+      });
+    });
+  }
+
+  // ── Render Progress ────────────────────────────────────
+  function renderProgress(){
+    if(!D||!D.historias){renderEmpty();return;}
+    const{cfg,totalH,baseline,bac_total:bac_pert}=computeBaseline();
+    // Apply custom BAC (user-editable) over PERT-derived value
+    const customBacH=loadCustomBacH();
+    const effectiveTotalH=customBacH!=null?customBacH:totalH;
+    const bac_total=effectiveTotalH*HOURLY_RATE;
+
+    const evm=loadEvm();
+    const state=loadState();
+    const aprob=baseline.filter(b=>(state[b.hu_id]||{}).status==='aprobada').length;
+
+    let totalEV=0,totalAC=0,totalPVcurrent=0;
+    baseline.forEach(b=>{
+      const o=evm.per_hu[b.hu_id]||{};
+      totalPVcurrent+=(+o.pv||0);
+      totalEV+=(+o.ev||0);
+      totalAC+=(+o.ac||0);
+    });
+
+    const pctComplete=bac_total>0?(totalEV/bac_total*100):0;
+    const cv=totalEV-totalAC;
+    const sv=totalEV-totalPVcurrent;
+    const cpi=totalAC>0?(totalEV/totalAC):0;
+    const spi=totalPVcurrent>0?(totalEV/totalPVcurrent):0;
+    const eac=cpi>0?(bac_total/cpi):bac_total;
+    const etc=eac-totalAC;
+    const vac=bac_total-eac;
+    const tcpi=(bac_total-totalAC)!==0?((bac_total-totalEV)/(bac_total-totalAC)):0;
+
+    const dates=loadDates();
+    const startDate=parseISODate(dates.start);
+    let endDate=parseISODate(dates.end);
+    if(startDate&&!endDate) endDate=addBusinessDays(startDate,cfg.dias);
+    const diasHabilesDecl=(startDate&&endDate)?businessDaysBetween(startDate,endDate):cfg.dias;
+    const fechasOk=!!(startDate&&endDate);
+    const fechaHint=fechasOk?('<strong>'+fmtDateLong(startDate)+'</strong> → <strong>'+fmtDateLong(endDate)+'</strong> · '+diasHabilesDecl+' días hábiles'):'<em style="color:var(--rr-orange)">Declara fecha de inicio y fin para fijar la línea base del Gantt</em>';
+
+    // Sprint info
+    const sprintInfoHtml=
+      '<div class="card"><h2>📅 Datos del Sprint <span class="ux-tip" data-tip="Parámetros del sprint: fechas, capacidad y BAC.">?</span></h2>'+
+      '<div class="sprint-dates-bar">'+
+        '<div class="date-field"><label>Inicio <span class="ux-tip" data-tip="Primer día hábil.">?</span></label><input type="date" id="sprint-date-start" value="'+esc(dates.start||'')+'"></div>'+
+        '<div class="date-field"><label>Fin <span class="ux-tip" data-tip="Último día hábil. Se autocompleta si está vacío.">?</span></label><input type="date" id="sprint-date-end" value="'+esc(dates.end||'')+'"></div>'+
+        '<div class="date-field"><label>&nbsp;</label><button type="button" class="btn btn-primary btn-sm" id="btn-autofill-end" data-tip="Calcula el fin del sprint excluyendo fines de semana y festivos Colombia">⚡ Auto ('+cfg.dias+' días)</button></div>'+
+        '<div class="date-field"><label>&nbsp;</label><button type="button" class="btn btn-secondary btn-sm" id="btn-clear-dates" style="border-color:var(--rag-red);color:var(--rag-red)">🗑 Limpiar</button></div>'+
+      '</div>'+
+      '<p style="font-size:.8rem;color:var(--color-text-muted);margin-bottom:var(--space-3)">'+fechaHint+'</p>'+
+      '<div class="summary-grid">'+
+        '<div class="kpi"><div class="kpi-label">Sprint</div><div class="kpi-value">'+esc(SPRINT_ID)+'</div><div class="kpi-hint">'+esc((D.config&&D.config.proyecto_nombre)||'')+'</div></div>'+
+        '<div class="kpi"><div class="kpi-label">Duración</div><div class="kpi-value">'+diasHabilesDecl+'d</div><div class="kpi-hint">días hábiles</div></div>'+
+        '<div class="kpi"><div class="kpi-label">Equipo mín. requerido <span class="ux-tip" data-tip="Personas estimadas × 8h efectivas por persona por día.">?</span></div><div class="kpi-value">'+cfg.personas+' pers.</div><div class="kpi-hint">'+(cfg.personas*8)+' h/día · 8h/persona</div></div>'+
+        '<div class="kpi"><div class="kpi-label">HUs aprobadas</div><div class="kpi-value">'+aprob+' / '+baseline.length+'</div><div class="kpi-hint">línea base HITL</div></div>'+
+      '</div>'+
+      (()=>{const hs=(D&&D.historias)||[];const sd=sprintDistFromHistorias(hs);const st=hs.reduce((a,h)=>a+(h.estimacion_total_horas||0),0);return'<div style="padding-top:var(--space-3);border-top:1px solid var(--color-border)">'+renderEstBar(sd,st)+'</div>';})()+'</div>';
+
+    // Unit toggle
+    const curUnit=loadUnit();
+    const unitBtn=(u,l,tip)=>'<button type="button" class="unit-btn'+(curUnit===u?' active':'')+'" data-unit="'+u+'" title="'+esc(tip)+'">'+esc(l)+'</button>';
+    const unitHtml='<div class="unit-toggle-wrap"><span class="unit-toggle-label">Mostrar EVM en: <span class="ux-tip" data-tip="Tarifa: '+HOURLY_RATE.toLocaleString()+' COP/h · USD: '+USD_RATE.toLocaleString()+' COP">?</span></span>'+
+      '<div class="unit-toggle">'+unitBtn('hours','⏱ Horas','Horas-persona')+unitBtn('cop','🇨🇴 COP','Pesos colombianos')+unitBtn('usd','🇺🇸 USD','Dólares')+'</div></div>';
+
+    // EVM KPIs
+    const bacHint=curUnit==='hours'?(effectiveTotalH.toFixed(0)+' h totales'):(effectiveTotalH.toFixed(0)+' h × '+fmtEvm(HOURLY_RATE)+'/h');
+    const evmKpis=
+      '<div class="card"><h2>💰 KPIs de Valor Ganado (EVM) <span class="ux-tip" data-tip="PMI-PMBOK 7. BAC=presupuesto. PV=planificado. EV=ganado. AC=costo real.">?</span></h2>'+
+      unitHtml+
+      '<div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.65rem var(--space-4);background:var(--rr-orange-light);border:1px solid var(--rr-orange-border);border-radius:var(--radius-md);margin-bottom:var(--space-3)">'+
+        '<span style="font-size:.74rem;font-weight:700;color:var(--rr-orange)">✏ BAC editable (horas):</span>'+
+        '<input type="number" id="bac-custom-input" aria-label="BAC editable en horas" value="'+effectiveTotalH.toFixed(1)+'" step="1" min="1" style="width:90px;padding:.3rem .5rem;border:1px solid var(--rr-orange-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-text);font-family:var(--font-mono);font-size:.82rem;font-weight:700">'+
+        '<button id="btn-bac-reset" class="btn btn-ghost btn-sm" style="font-size:.72rem">↩ Restablecer PERT ('+totalH.toFixed(0)+'h)</button>'+
+        '<span style="font-size:.72rem;color:var(--color-text-muted)">PERT derivado: <strong>'+totalH.toFixed(1)+' h</strong></span>'+
+      '</div>'+
+      '<div class="summary-grid">'+
+        '<div class="kpi"><div class="kpi-label">BAC <span class="ux-tip" data-tip="Budget At Completion: presupuesto total del sprint. Editable arriba.">?</span></div><div class="kpi-value" id="bac-kpi-value">'+fmtEvm(bac_total)+'</div><div class="kpi-hint">'+esc(bacHint)+'</div></div>'+
+        '<div class="kpi"><div class="kpi-label">PV <span class="ux-tip" data-tip="Planned Value: valor planificado a la fecha.">?</span></div><div class="kpi-value">'+fmtEvm(totalPVcurrent)+'</div><div class="kpi-hint">planificado</div></div>'+
+        '<div class="kpi kpi-'+(spi>=0.95?'green':spi>=0.85?'amber':'red')+'"><div class="kpi-label">EV <span class="ux-tip" data-tip="Earned Value: valor del trabajo completado.">?</span></div><div class="kpi-value">'+fmtEvm(totalEV)+'</div><div class="kpi-hint">SPI: '+fmtNum(spi)+'</div></div>'+
+        '<div class="kpi kpi-'+(cpi>=0.95?'green':cpi>=0.85?'amber':'red')+'"><div class="kpi-label">AC <span class="ux-tip" data-tip="Actual Cost: costo real incurrido.">?</span></div><div class="kpi-value">'+fmtEvm(totalAC)+'</div><div class="kpi-hint">CPI: '+fmtNum(cpi)+'</div></div>'+
+        '<div class="kpi"><div class="kpi-label">% Completado</div><div class="kpi-value">'+pctComplete.toFixed(1)+'%</div><div class="kpi-hint">EV / BAC</div></div>'+
+        '<div class="kpi"><div class="kpi-label">EAC <span class="ux-tip" data-tip="Estimate At Completion = BAC ÷ CPI.">?</span></div><div class="kpi-value">'+fmtEvm(eac)+'</div><div class="kpi-hint">VAC: '+fmtEvm(vac)+'</div></div>'+
+      '</div>'+
+      '<p style="font-size:.78rem;color:var(--color-text-muted);margin-top:var(--space-2)">Unidad: <strong>'+unitSuffix()+'</strong> · CV='+fmtEvm(cv)+' · SV='+fmtEvm(sv)+' · ETC='+fmtEvm(etc)+' · TCPI='+fmtNum(tcpi)+'</p>'+
+      '</div>';
+
+    // EVM table
+    let evmRowsHtml='';
+    baseline.forEach(b=>{
+      const o=evm.per_hu[b.hu_id]||{};
+      const ev=+o.ev||0,ac=+o.ac||0,pv=+o.pv||0;
+      const cv_=ev-ac,sv_=ev-pv;
+      const cpi_=ac>0?(ev/ac):0,spi_=pv>0?(ev/pv):0;
+      const eac_=cpi_>0?(b.bac/cpi_):b.bac;
+      const etc_=eac_-ac,vac_=b.bac-eac_,tcpi_=(b.bac-ac)!==0?((b.bac-ev)/(b.bac-ac)):0;
+      const estado=ev===0?'No iniciada':(ev>=b.bac*0.99?'Completada':'En curso');
+      const estadoCls=ev===0?'badge-gray':(ev>=b.bac*0.99?'badge-green':'badge-orange');
+      const pvU=toUnit(pv),evU=toUnit(ev),acU=toUnit(ac);
+      const stepU=curUnit==='hours'?0.5:(curUnit==='usd'?10:10000);
+      evmRowsHtml+='<tr>'+
+        '<td title="'+esc(b.titulo)+'"><strong>'+esc(b.hu_id)+'</strong><br><span style="color:var(--color-text-muted);font-size:.66rem">'+esc(b.titulo).slice(0,40)+'</span></td>'+
+        '<td>'+fmtEvm(b.bac)+'</td>'+
+        '<td><input type="number" class="evm-input" data-hu="'+esc(b.hu_id)+'" data-k="pv" value="'+pvU+'" min="0" step="'+stepU+'"></td>'+
+        '<td><input type="number" class="evm-input" data-hu="'+esc(b.hu_id)+'" data-k="ev" value="'+evU+'" min="0" step="'+stepU+'"></td>'+
+        '<td><input type="number" class="evm-input" data-hu="'+esc(b.hu_id)+'" data-k="ac" value="'+acU+'" min="0" step="'+stepU+'"></td>'+
+        '<td style="color:'+(cv_>=0?'#16A34A':'#DC2626')+'">'+fmtEvm(cv_)+'</td>'+
+        '<td style="color:'+(sv_>=0?'#16A34A':'#DC2626')+'">'+fmtEvm(sv_)+'</td>'+
+        '<td style="color:'+(cpi_>=0.95?'#16A34A':cpi_>=0.85?'#D97706':'#DC2626')+'">'+fmtNum(cpi_)+'</td>'+
+        '<td style="color:'+(spi_>=0.95?'#16A34A':spi_>=0.85?'#D97706':'#DC2626')+'">'+fmtNum(spi_)+'</td>'+
+        '<td>'+fmtEvm(eac_)+'</td><td>'+fmtEvm(etc_)+'</td>'+
+        '<td style="color:'+(vac_>=0?'#16A34A':'#DC2626')+'">'+fmtEvm(vac_)+'</td>'+
+        '<td>'+fmtNum(tcpi_)+'</td>'+
+        '<td><span class="badge '+estadoCls+'">'+estado+'</span></td>'+
+      '</tr>';
+    });
+    const evmTableHtml=
+      '<div class="card"><h2>📝 EVM por Historia de Usuario <span class="ux-tip" data-tip="Edita PV, EV y AC. El resto se calcula con fórmulas PMI-PMBOK.">?</span></h2>'+
+      '<p style="font-size:.8rem;color:var(--color-text-muted);margin-bottom:var(--space-3)">Edita <strong>PV</strong>, <strong>EV</strong> y <strong>AC</strong> en la unidad seleccionada. Los valores se guardan en COP internamente.</p>'+
+      '<div style="overflow-x:auto"><table class="evm-table"><thead><tr>'+
+        '<th>Historia</th><th>BAC <span class="ux-tip" data-tip="Presupuesto total de la HU.">?</span></th>'+
+        '<th>PV <span class="ux-tip" data-tip="Planned Value — valor planificado a la fecha.">?</span></th>'+
+        '<th>EV <span class="ux-tip" data-tip="Earned Value — valor completado.">?</span></th>'+
+        '<th>AC <span class="ux-tip" data-tip="Actual Cost — costo real.">?</span></th>'+
+        '<th>CV <span class="ux-tip" data-tip="Cost Variance = EV − AC.">?</span></th>'+
+        '<th>SV <span class="ux-tip" data-tip="Schedule Variance = EV − PV.">?</span></th>'+
+        '<th>CPI <span class="ux-tip" data-tip="EV ÷ AC. Verde ≥0.95.">?</span></th>'+
+        '<th>SPI <span class="ux-tip" data-tip="EV ÷ PV. Verde ≥0.95.">?</span></th>'+
+        '<th>EAC <span class="ux-tip" data-tip="BAC ÷ CPI.">?</span></th>'+
+        '<th>ETC <span class="ux-tip" data-tip="EAC − AC.">?</span></th>'+
+        '<th>VAC <span class="ux-tip" data-tip="BAC − EAC.">?</span></th>'+
+        '<th>TCPI <span class="ux-tip" data-tip="(BAC−EV) ÷ (BAC−AC). >1.2 = alerta.">?</span></th>'+
+        '<th>Estado</th>'+
+      '</tr></thead><tbody>'+evmRowsHtml+'</tbody></table></div></div>';
+
+    // Snapshot form
+    const snaps=evm.snapshots||[];
+    const last=snaps.length?snaps[snaps.length-1]:null;
+    const snapFormHtml=
+      '<div class="card"><h2>📸 Registrar medición <span class="ux-tip" data-tip="Snapshot del estado EVM. Úsalo al cierre de cada día o mínimo 2 veces/semana.">?</span></h2>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3);margin-bottom:var(--space-4);align-items:end">'+
+        '<label style="font-size:.76rem;color:var(--color-text-muted)">Fecha<input type="date" id="snap-fecha" class="pert-input" style="width:100%;margin-top:.2rem" value="'+new Date().toISOString().slice(0,10)+'"></label>'+
+        '<label style="font-size:.76rem;color:var(--color-text-muted)">Notas<input type="text" id="snap-notas" class="pert-input" style="width:100%;margin-top:.2rem" placeholder="Ej: fin semana 1"></label>'+
+        '<button class="btn btn-primary" id="btn-snap">📌 Guardar medición</button>'+
+      '</div>'+
+      (last?'<p style="font-size:.76rem;color:var(--color-text-muted)">Última: <strong>'+esc(last.fecha||'')+'</strong> · EV='+fmtEvm(last.ev||0)+' · AC='+fmtEvm(last.ac||0)+'</p>':'<p style="font-size:.76rem;color:var(--color-text-muted)">Sin mediciones aún.</p>')+
+      // PMO quick button
+      '<div class="pmo-quick">'+
+        '<p>Genera el informe semanal de la Bitácora PMO con las métricas EVM y riesgos activos. Optimizado para impresión/PDF en modo claro.</p>'+
+        '<div style="display:flex;gap:.75rem;flex-wrap:wrap">'+
+        '<button class="btn btn-primary btn-lg" id="btn-pmo-quick" style="background:linear-gradient(135deg,#FF7E08,#FF9A00);font-size:.9rem;padding:.7rem 1.4rem">📋 Generar Bitácora PMO (PDF)</button>'+
+        '<button class="btn btn-secondary" id="btn-pmo-md" data-tip="Descarga la Bitácora PMO como archivo Markdown (.md) para archivar o compartir por email." style="font-size:.9rem;padding:.7rem 1.4rem">⬇ Descargar .md</button>'+
+        '</div>'+
+      '</div>'+
+      '</div>';
+
+    // EVM AI accelerator
+    const evmAccelHtml = aiAccel('🤖','Acelerador IA · EVM','EVM Expert','Analiza tus métricas de Valor Ganado con un experto IA. Ingresa tus datos EVM y obtén interpretación instantánea, alertas y recomendaciones de acción.','https://gemini.google.com/gem/1X0Tw7yi1vXDdExt6lIAZK-HyB402PQrG?usp=sharing');
+
+    // Chart
+    const chartHtml=
+      '<div class="card"><h2>📈 Gráfico PV / EV / AC <span class="ux-tip" data-tip="Gris=PV (plan). Verde=EV (ganado). Rojo=AC (costo real). Si EV queda bajo PV, el sprint va retrasado.">?</span></h2>'+
+      '<div class="chart-wrap"><canvas id="evm-chart"></canvas><div id="chart-fallback"></div></div></div>';
+
+    // Snapshot history
+    let snapsHistHtml='<div class="card"><h2>🗂️ Historial de mediciones ('+snaps.length+')</h2>';
+    if(!snaps.length){snapsHistHtml+='<p style="color:var(--color-text-muted)">Sin mediciones aún.</p>';}
+    else{
+      snapsHistHtml+='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Fecha</th><th>PV</th><th>EV</th><th>AC</th><th>CPI</th><th>SPI</th><th>Notas</th><th></th></tr></thead><tbody>';
+      snaps.forEach((s,i)=>{
+        const pv_=+s.pv||0,ev_=+s.ev||0,ac_=+s.ac||0;
+        const cpi_=ac_>0?(ev_/ac_):0,spi_=pv_>0?(ev_/pv_):0;
+        snapsHistHtml+='<tr><td>'+(i+1)+'</td><td>'+esc(s.fecha||'')+'</td><td>'+fmtEvm(pv_)+'</td><td>'+fmtEvm(ev_)+'</td><td>'+fmtEvm(ac_)+'</td>'+
+          '<td style="color:'+(cpi_>=0.95?'#16A34A':cpi_>=0.85?'#D97706':'#DC2626')+'">'+fmtNum(cpi_)+'</td>'+
+          '<td style="color:'+(spi_>=0.95?'#16A34A':spi_>=0.85?'#D97706':'#DC2626')+'">'+fmtNum(spi_)+'</td>'+
+          '<td style="color:var(--color-text-muted);font-size:.76rem">'+esc(s.notas||'')+'</td>'+
+          '<td><button class="btn btn-ghost btn-sm" data-snap-del="'+i+'">✕</button></td></tr>';
+      });
+      snapsHistHtml+='</tbody></table></div>';
+    }
+    snapsHistHtml+='</div>';
+
+    // Gantt
+    const ganttAccelHtml = aiAccel('📅','Acelerador IA · Cronograma','Sofka Management Engine','Optimiza tu cronograma con IA. Ingresa las HUs, dependencias y capacidad del equipo para obtener un plan de ejecución detallado y alertas de riesgo de entrega.','https://gemini.google.com/gem/1Xkzz9iMSepZuKANelh2CT7Y4gKBxjcq0?usp=sharing');
+    const ganttHtml=
+      '<div class="card"><h2>📅 Gantt de Ruta Crítica <span class="ux-tip" data-tip="Secuenciación propuesta respetando dependencias bloqueantes. Duración por HU = máx días por rol.">?</span></h2>'+
+      '<div class="gantt-wrap" id="gantt-wrap"></div>'+
+      '<div class="gantt-legend"><span><span class="legend-dot" style="background:#16A34A"></span>Excelente</span><span><span class="legend-dot" style="background:#FF7E08"></span>Buena</span><span><span class="legend-dot" style="background:#D97706"></span>Aceptable</span><span><span class="legend-dot" style="background:#DC2626"></span>Deficiente</span><span><span class="legend-dot" style="background:#333"></span>Buffer</span></div>'+
+      '<div id="deps-explain"></div>'+
+      '</div>'+
+      ganttAccelHtml;
+
+    // Risk radar
+    const allRiesgos=[];
+    baseline.forEach(b=>{ const h=(D.historias||[]).find(x=>x.hu_id===b.hu_id); (h&&h.riesgos||[]).forEach(r=>allRiesgos.push({...r,hu_id:b.hu_id})); });
+    const nivelOf=r=>+r.nivel_riesgo_valor||((+r.gravedad||0)*(+r.probabilidad_riesgo||0))||0;
+    const rInaceptable=allRiesgos.filter(r=>nivelOf(r)>=15);
+    const rCriticos=allRiesgos.filter(r=>{const n=nivelOf(r);return n>=10&&n<=14;});
+    const rGraves=allRiesgos.filter(r=>{const n=nivelOf(r);return n>=5&&n<=9;});
+    const rTolerables=allRiesgos.filter(r=>{const n=nivelOf(r);return n>=1&&n<=4;});
+    const topR=[...rInaceptable,...rCriticos].sort((a,b)=>nivelOf(b)-nivelOf(a)).slice(0,10);
+    const riskAccelHtml = aiAccel('🛡️','Acelerador IA · Riesgos','Sofka Risk Management Engine','Gestiona tu matriz de riesgos con IA. Analiza causas raíz, simula escenarios y genera planes de mitigación accionables alineados a RISICAR (DAFP).','https://gemini.google.com/gem/1Xsme8U6epQa_t1MyLadK69x9r0h8TIgl?usp=sharing');
+    const riesgosHtml2=
+      '<div class="card"><h2>⚠️ Radar de Riesgos — RISICAR <span class="ux-tip" data-tip="Nivel = Gravedad × Probabilidad. Inaceptable (15-25) y Crítico (10-14) requieren acción inmediata.">?</span></h2>'+
+      '<div class="summary-grid" style="margin-bottom:var(--space-3)">'+
+        '<div class="kpi kpi-red"><div class="kpi-label">Inaceptable (15-25)</div><div class="kpi-value">'+rInaceptable.length+'</div><div class="kpi-hint">acción inmediata</div></div>'+
+        '<div class="kpi kpi-red"><div class="kpi-label">Crítico (10-14)</div><div class="kpi-value">'+rCriticos.length+'</div><div class="kpi-hint">mitigación activa</div></div>'+
+        '<div class="kpi kpi-amber"><div class="kpi-label">Grave (5-9)</div><div class="kpi-value">'+rGraves.length+'</div><div class="kpi-hint">seguimiento</div></div>'+
+        '<div class="kpi kpi-green"><div class="kpi-label">Tolerable (1-4)</div><div class="kpi-value">'+rTolerables.length+'</div><div class="kpi-hint">bajo control</div></div>'+
+        '<div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value">'+allRiesgos.length+'</div><div class="kpi-hint">en '+baseline.length+' HUs</div></div>'+
+      '</div>'+
+      '<div id="sprint-risk-matrix"><p style="color:var(--color-text-muted);font-size:.84rem">Cargando matriz…</p></div>'+
+      '</div>'+
+      riskAccelHtml;
+
+    // Build progress content with sub-panels
+    document.getElementById('progress-content').innerHTML=
+      '<div class="sub-panel active" id="sub-evm">'+
+        sprintInfoHtml+
+        evmKpis+
+        evmTableHtml+
+        snapFormHtml+
+        evmAccelHtml+
+        chartHtml+
+        snapsHistHtml+
+      '</div>'+
+      '<div class="sub-panel" id="sub-gantt">'+
+        ganttHtml+
+      '</div>'+
+      '<div class="sub-panel" id="sub-riesgos">'+
+        riesgosHtml2+
+      '</div>';
+
+    // Wire EVM inputs — save on change but re-render only on blur to avoid flicker
+    document.querySelectorAll('.evm-input').forEach(inp=>{
+      inp.addEventListener('change',()=>{
+        const e=loadEvm(); e.per_hu=e.per_hu||{}; e.per_hu[inp.dataset.hu]=e.per_hu[inp.dataset.hu]||{};
+        e.per_hu[inp.dataset.hu][inp.dataset.k]=fromUnit(inp.value); saveEvm(e);
+      });
+      inp.addEventListener('blur',()=>{ renderProgress(); });
+    });
+    document.querySelectorAll('.unit-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{ saveUnit(btn.dataset.unit); renderProgress(); });
+    });
+    const btnSnap=document.getElementById('btn-snap');
+    if(btnSnap) btnSnap.addEventListener('click',()=>{
+      const fecha=document.getElementById('snap-fecha').value||new Date().toISOString().slice(0,10);
+      const notas=document.getElementById('snap-notas').value||'';
+      const e=loadEvm(); e.snapshots=e.snapshots||[];
+      e.snapshots.push({fecha,pv:totalPVcurrent,ev:totalEV,ac:totalAC,cpi,spi,notas,registrado_en:new Date().toISOString()});
+      saveEvm(e); flash('Medición registrada'); renderProgress();
+    });
+    document.querySelectorAll('[data-snap-del]').forEach(btn=>{
+      btn.addEventListener('click',()=>{ const e=loadEvm(); e.snapshots.splice(+btn.dataset.snapDel,1); saveEvm(e); renderProgress(); });
+    });
+    // PMO quick button
+    const pmoBtn=document.getElementById('btn-pmo-quick');
+    if(pmoBtn) pmoBtn.addEventListener('click',()=>{ printPmoReport(); flash('Abriendo Bitácora PMO…'); });
+    const pmoMdBtn=document.getElementById('btn-pmo-md');
+    if(pmoMdBtn) pmoMdBtn.addEventListener('click',()=>{ const date=new Date().toISOString().slice(0,10); download(SPRINT_ID+'-bitacora-pmo-'+date+'.md',buildPmoMd(),'text/markdown'); flash('Bitácora PMO (.md) descargada'); });
+    // BAC editable
+    const bacInp=document.getElementById('bac-custom-input');
+    const bacResetBtn=document.getElementById('btn-bac-reset');
+    if(bacInp) bacInp.addEventListener('change',()=>{ const v=parseFloat(bacInp.value)||0; saveCustomBacH(v>0?v:null); renderProgress(); });
+    if(bacResetBtn) bacResetBtn.addEventListener('click',()=>{ saveCustomBacH(null); renderProgress(); });
+    // Date inputs
+    const inpStart=document.getElementById('sprint-date-start');
+    const inpEnd=document.getElementById('sprint-date-end');
+    const btnAuto=document.getElementById('btn-autofill-end');
+    const btnClr=document.getElementById('btn-clear-dates');
+    if(inpStart) inpStart.addEventListener('change',()=>{ const d=loadDates();d.start=inpStart.value||null;saveDates(d);renderProgress(); });
+    if(inpEnd) inpEnd.addEventListener('change',()=>{ const d=loadDates();d.end=inpEnd.value||null;saveDates(d);renderProgress(); });
+    if(btnAuto) btnAuto.addEventListener('click',()=>{ const d=loadDates();const s=parseISODate(d.start);if(!s){flash('Primero declara la fecha de inicio');return;}d.end=toISODate(addBusinessDays(s,cfg.dias));saveDates(d);renderProgress(); });
+    if(btnClr) btnClr.addEventListener('click',()=>{ if(!confirm('¿Borrar las fechas?'))return;saveDates({});renderProgress(); });
+    // Render chart immediately (EVM is default active sub-panel)
+    const cfgWithDates=Object.assign({},cfg,{dias:diasHabilesDecl,startDate,endDate,fechasDeclaradas:fechasOk});
+    renderEvmChart(snaps,bac_total,cfgWithDates,dates);
+    // Re-init sub-tabs with lazy render for Gantt and Riesgos
+    initProgressSubTabs(baseline,cfgWithDates,snaps,bac_total,dates);
+  }
+
+  // ── Sprint Risk Matrix ────────────────────────────────
+  function renderSprintRisksMatrix(){
+    const wrap=document.getElementById('sprint-risk-matrix');
+    if(!wrap)return;
+    const state=loadState();
+    const allR=[];
+    (D.historias||[]).forEach(h=>{
+      (h.riesgos||[]).forEach(r=>{
+        const rs=((state[h.hu_id]||{}).risks||{})[r.riesgo_id]||{};
+        const g=rs.gravedad!=null?+rs.gravedad:(r.gravedad||1);
+        const p=rs.probabilidad_riesgo!=null?+rs.probabilidad_riesgo:(r.probabilidad_riesgo||1);
+        const cerrado=rs.cerrado!=null?rs.cerrado:(r.estado===1);
+        const nivel=risicarNivel(g,p);
+        allR.push({r,g,p,cerrado,nivel,hu_id:h.hu_id});
+      });
+    });
+    allR.sort((a,b)=>{ if(a.cerrado!==b.cerrado)return a.cerrado?1:-1; return b.nivel.val-a.nivel.val; });
+    const gL=['','Insignificante','Menor','Moderada','Mayor','Catastrófica'];
+    const pL=['','Muy baja','Baja','Media','Alta','Muy alta'];
+    let html='<h3 style="font-size:.88rem;margin-bottom:var(--space-3)">Matriz completa de riesgos (clic para expandir)</h3>'+
+      '<div style="overflow-x:auto"><table class="tbl" id="risk-matrix-tbl">'+
+      '<thead><tr><th>HU</th><th>ID</th><th>Tipología</th><th>Nivel</th><th>G×P</th><th>Descripción</th><th>Estado</th><th>Acción</th></tr></thead>'+
+      '<tbody id="risk-matrix-body">';
+    allR.forEach(({r,g,p,cerrado,nivel,hu_id},idx)=>{
+      const rowId='rm-row-'+idx;
+      const detId='rm-det-'+idx;
+      const sevOpt=[1,2,3,4,5].map(v=>'<option value="'+v+'"'+(g===v?' selected':'')+'>'+v+'–'+gL[v]+'</option>').join('');
+      const probOpt=[1,2,3,4,5].map(v=>'<option value="'+v+'"'+(p===v?' selected':'')+'>'+v+'–'+pL[v]+'</option>').join('');
+      html+='<tr class="rm-row'+(cerrado?' rm-cerrado':'')+'" id="'+rowId+'" style="opacity:'+(cerrado?.4:1)+';cursor:pointer" onclick="document.getElementById(\''+detId+'\').style.display=document.getElementById(\''+detId+'\').style.display===\'none\'?\'table-row\':\'none\'">'+
+        '<td><span class="hu-id">'+esc(hu_id)+'</span></td>'+
+        '<td><span class="hu-id">'+esc(r.riesgo_id||'—')+'</span></td>'+
+        '<td style="font-size:.72rem">'+esc(r.tipologia||r.categoria||'—')+'</td>'+
+        '<td><span class="nivel-chip '+nivel.cls+'" id="rm-chip-'+idx+'">'+nivel.val+' — '+nivel.label+'</span></td>'+
+        '<td style="font-weight:700;text-align:center">'+nivel.val+'</td>'+
+        '<td style="font-size:.8rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.descripcion||'')+'">'+esc((r.descripcion||'').slice(0,60))+(r.descripcion&&r.descripcion.length>60?'…':'')+'</td>'+
+        '<td><span class="badge '+(cerrado?'badge-gray':'badge-orange')+'">'+( cerrado?'Cerrado':'Abierto')+'</span></td>'+
+        '<td><span style="color:var(--color-text-muted);font-size:.8rem">▾ detalles</span></td>'+
+      '</tr>'+
+      '<tr id="'+detId+'" style="display:none;background:var(--color-surface-2)">'+
+        '<td colspan="8" style="padding:var(--space-4)">'+
+          '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem .8rem;font-size:.8rem;margin-bottom:.75rem">'+
+            '<div><strong>Causa:</strong> '+esc(r.causa||'—')+'</div>'+
+            '<div><strong>Consecuencia:</strong> '+esc(r.consecuencia||'—')+'</div>'+
+            '<div><strong>Estrategia:</strong> '+esc(r.estrategia_respuesta||'—')+'</div>'+
+            '<div><strong>Mitigación:</strong> '+esc(r.mitigacion||'—')+'</div>'+
+            '<div><strong>Responsable:</strong> '+esc(r.responsable||'—')+'</div>'+
+            (r.fecha_mitigacion?'<div><strong>Fecha:</strong> '+esc(r.fecha_mitigacion)+'</div>':'')+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">'+
+            '<label style="font-size:.76rem;font-weight:600">Gravedad: <select class="risk-select rm-g-sel" data-idx="'+idx+'" data-hu="'+esc(hu_id)+'" data-rid="'+esc(r.riesgo_id)+'">'+sevOpt+'</select></label>'+
+            '<span style="color:var(--color-text-muted)">×</span>'+
+            '<label style="font-size:.76rem;font-weight:600">Probabilidad: <select class="risk-select rm-p-sel" data-idx="'+idx+'" data-hu="'+esc(hu_id)+'" data-rid="'+esc(r.riesgo_id)+'">'+probOpt+'</select></label>'+
+            '<button class="btn btn-ghost btn-sm rm-cerrar-btn" data-idx="'+idx+'" data-hu="'+esc(hu_id)+'" data-rid="'+esc(r.riesgo_id)+'" data-cerrado="'+(cerrado?'1':'0')+'" style="margin-left:.5rem">'+
+              (cerrado?'↩ Re-abrir riesgo':'✓ Cerrar/Descartar riesgo')+
+            '</button>'+
+          '</div>'+
+        '</td>'+
+      '</tr>';
+    });
+    html+='</tbody></table></div>';
+    wrap.innerHTML=html;
+    // Wire interactions
+    wrap.querySelectorAll('.rm-g-sel,.rm-p-sel').forEach(sel=>{
+      sel.addEventListener('change',()=>{
+        const idx=+sel.dataset.idx; const huId=sel.dataset.hu; const rid=sel.dataset.rid;
+        const s=huState(huId); s.risks[rid]=s.risks[rid]||{};
+        if(sel.classList.contains('rm-g-sel')) s.risks[rid].gravedad=+sel.value;
+        else s.risks[rid].probabilidad_riesgo=+sel.value;
+        updateHu(huId,{risks:s.risks});
+        // Recalc nivel chip
+        const row=document.querySelector('.rm-row#rm-row-'+idx);
+        if(row){
+          const gSel=wrap.querySelector('.rm-g-sel[data-idx="'+idx+'"]');
+          const pSel=wrap.querySelector('.rm-p-sel[data-idx="'+idx+'"]');
+          if(gSel&&pSel){const nv=risicarNivel(+gSel.value,+pSel.value);const chip=wrap.querySelector('#rm-chip-'+idx);if(chip){chip.textContent=nv.val+' — '+nv.label;chip.className='nivel-chip '+nv.cls;}}
+        }
+        updateCriticalRisksKpi();
+      });
+    });
+    wrap.querySelectorAll('.rm-cerrar-btn').forEach(btn=>{
+      btn.addEventListener('click',e=>{
+        e.stopPropagation();
+        const idx=+btn.dataset.idx; const huId=btn.dataset.hu; const rid=btn.dataset.rid;
+        const nowCerrado=btn.dataset.cerrado==='1'; const newState=!nowCerrado;
+        const s=huState(huId); s.risks[rid]=s.risks[rid]||{}; s.risks[rid].cerrado=newState;
+        updateHu(huId,{risks:s.risks});
+        updateCriticalRisksKpi();
+        renderSprintRisksMatrix(); // re-render
+      });
+    });
+  }
+
+  // ── EVM Chart ──────────────────────────────────────────
+  function renderEvmChart(snaps,bac,cfg,dates){
+    const canvas=document.getElementById('evm-chart');
+    const fallback=document.getElementById('chart-fallback');
+    if(!canvas) return;
+    // Build axis from sprint dates if available
+    const startDate=dates&&parseISODate(dates.start);
+    const endDate=dates&&parseISODate(dates.end);
+    const hasDates=!!(startDate&&endDate);
+    // Deduplicate snaps by date: last registration per date wins (most recent value)
+    const snapMap={};
+    snaps.forEach(s=>{if(s.fecha) snapMap[s.fecha]=s;});
+    const snapDates=Object.keys(snapMap);
+    let labels,pvLine,evData,acData;
+    if(hasDates){
+      const totalBD=businessDaysBetween(startDate,endDate)||1;
+      // Axis = full sprint calendar, extended to include any snap dates outside it
+      let axisStart=startDate, axisEnd=endDate;
+      snapDates.forEach(d=>{
+        const sd=parseISODate(d);
+        if(sd&&sd<axisStart) axisStart=sd;
+        if(sd&&sd>axisEnd)   axisEnd=sd;
+      });
+      // Build business-day axis, then inject any snapshot dates that aren't business days
+      const axisDayObjs=businessDayList(axisStart,businessDaysBetween(axisStart,axisEnd));
+      const axisSet=new Set(axisDayObjs.map(d=>toISODate(d)));
+      snapDates.forEach(d=>{ if(!axisSet.has(d)){ const pd=parseISODate(d); if(pd){axisDayObjs.push(pd);axisSet.add(d);} } });
+      axisDayObjs.sort((a,b)=>a-b);
+      labels=axisDayObjs.map(d=>toISODate(d));
+      // PV: 0→BAC anchored to declared sprint start/end; clamp outside
+      pvLine=labels.map(d=>{
+        const cur=parseISODate(d);
+        if(!cur||cur<=axisStart&&cur<startDate) return 0; // before sprint
+        if(cur<startDate) return 0;
+        if(cur>=endDate) return bac;
+        return bac*(businessDaysBetween(startDate,cur)/totalBD);
+      });
+      // EV / AC: use last snapshot per date; null on non-snap dates
+      evData=labels.map(d=>snapMap[d]!=null?+snapMap[d].ev:null);
+      acData=labels.map(d=>snapMap[d]!=null?+snapMap[d].ac:null);
+    } else {
+      // No declared dates
+      if(!snaps.length){
+        labels=['Inicio','Fin (D'+((cfg&&cfg.dias)||10)+')'];
+        pvLine=[0,bac]; evData=[null,null]; acData=[null,null];
+      } else {
+        // Use deduplicated snapshots, sorted by date
+        const sortedSnaps=snapDates.sort().map(d=>snapMap[d]);
+        labels=sortedSnaps.map((s,i)=>s.fecha||('M'+(i+1)));
+        pvLine=sortedSnaps.map((_,i)=>bac*(i/(sortedSnaps.length-1||1)));
+        evData=sortedSnaps.map(s=>+s.ev||0);
+        acData=sortedSnaps.map(s=>+s.ac||0);
+      }
+    }
+    if(typeof Chart==='undefined'){
+      canvas.style.display='none';
+      if(fallback)fallback.innerHTML=renderChartFallback(snaps,bac,labels,pvLine,evData,acData);
+      return;
+    }
+    if(fallback)fallback.innerHTML=''; canvas.style.display='';
+    if(window._rrChart){try{window._rrChart.destroy();}catch(e){} window._rrChart=null;}
+    const ctx=canvas.getContext('2d');
+    // Build trend dataset: linear regression over EV snapshots
+    const evPoints=evData.map((v,i)=>v!=null?{x:i,y:v}:null).filter(Boolean);
+    let trendData=labels.map(()=>null);
+    if(evPoints.length>=2){
+      const n2=evPoints.length,sx=evPoints.reduce((a,p)=>a+p.x,0),sy=evPoints.reduce((a,p)=>a+p.y,0);
+      const sxy=evPoints.reduce((a,p)=>a+p.x*p.y,0),sx2=evPoints.reduce((a,p)=>a+p.x*p.x,0);
+      const slope=(n2*sxy-sx*sy)/(n2*sx2-sx*sx||1);
+      const intercept=(sy-slope*sx)/n2;
+      const lastIdx=evPoints[evPoints.length-1].x;
+      trendData=labels.map((_,i)=>i>=lastIdx?Math.max(0,Math.min(bac,slope*i+intercept)):null);
+    }
+    // snapMap already deduped above — reuse for tooltips
+    const snapByDate=snapMap;
+    window._rrChart=new Chart(ctx,{
+      type:'line',
+      data:{labels,datasets:[
+        {label:'PV — Línea Base',data:pvLine,borderColor:'#6B6560',borderDash:[6,4],fill:false,tension:0,pointRadius:0,borderWidth:1.5,order:3},
+        {label:'EV — Valor Ganado',data:evData,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.15)',fill:true,tension:.3,spanGaps:false,pointRadius:6,pointHoverRadius:9,pointBackgroundColor:'#22C55E',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3,order:1},
+        {label:'AC — Costo Real',data:acData,borderColor:'#F97316',backgroundColor:'rgba(249,115,22,.10)',fill:true,tension:.3,spanGaps:false,pointRadius:6,pointHoverRadius:9,pointBackgroundColor:'#F97316',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3,order:2},
+        {label:'Tendencia EV',data:trendData,borderColor:'rgba(34,197,94,.45)',borderDash:[3,5],fill:false,tension:0,pointRadius:0,borderWidth:2,order:4}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{position:'bottom',labels:{color:'#8A8785',font:{family:'Inter',size:12},filter:i=>i.text!=='Tendencia EV'||trendData.some(v=>v!=null)}},
+          tooltip:{callbacks:{
+            title:function(items){const lbl=items[0]&&items[0].label||'';const s=snapByDate[lbl];return lbl+(s&&s.notas?' — '+s.notas:'');},
+            label:function(ctx){
+              if(ctx.parsed.y==null)return null;
+              const s=snapByDate[ctx.label]||{};
+              const base=ctx.dataset.label+': '+fmtEvm(ctx.parsed.y);
+              if(ctx.datasetIndex===1&&s.pv!=null){const cpi=+s.ac>0?(+s.ev/+s.ac).toFixed(2):'—';const spi=+s.pv>0?(+s.ev/+s.pv).toFixed(2):'—';return base+' | CPI '+cpi+' · SPI '+spi;}
+              return base;
+            }
+          }}
+        },
+        scales:{
+          y:{ticks:{callback:v=>fmtEvm(v),color:'#8A8785',font:{size:10}},grid:{color:'#272730'},title:{display:true,text:'Valor ('+unitSuffix()+')',color:'#6B6560',font:{size:10}}},
+          x:{ticks:{color:'#8A8785',font:{size:10},maxRotation:45},grid:{color:'#272730'}}
+        }
+      }
+    });
+  }
+  function renderChartFallback(snaps,bac,labels,pvLine,evData,acData){
+    const W=800,H=280,P=50;
+    const n=(labels||[]).length||2;
+    const maxV=Math.max(bac,...(pvLine||[]).map(v=>v||0),...(evData||[]).filter(v=>v!=null),...(acData||[]).filter(v=>v!=null))||1;
+    const xStep=(W-2*P)/Math.max(1,n-1);
+    const y=v=>H-P-((+v/maxV)*(H-2*P));
+    const pathOf=(arr,color,dash)=>{
+      const pts=(arr||[]).map((v,i)=>v!=null?{i,v}:null).filter(Boolean);
+      if(!pts.length)return'';
+      const d=pts.map((pt,j)=>(j===0?'M':'L')+(P+pt.i*xStep)+' '+y(pt.v)).join(' ');
+      return'<path d="'+d+'" stroke="'+color+'" stroke-width="2.5" fill="none"'+(dash?' stroke-dasharray="6,4"':'')+'/>';
+    };
+    let svg='<svg viewBox="0 0 '+W+' '+H+'" class="chart-fallback" style="background:#141417">';
+    svg+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="#141417"/>';
+    svg+='<line x1="'+P+'" y1="'+(H-P)+'" x2="'+(W-P)+'" y2="'+(H-P)+'" stroke="#272730" stroke-width="1.5"/>';
+    svg+='<line x1="'+P+'" y1="'+P+'" x2="'+P+'" y2="'+(H-P)+'" stroke="#272730" stroke-width="1.5"/>';
+    svg+=pathOf(pvLine,'#6B6560',true)+pathOf(evData,'#16A34A',false)+pathOf(acData,'#DC2626',false);
+    svg+='<text x="'+(W/2)+'" y="'+(H-8)+'" text-anchor="middle" fill="#6B6560" font-size="11" font-family="Inter">Chart.js no disponible — SVG fallback</text>';
+    svg+='</svg>';
+    return svg;
+  }
+
+  // ── Gantt ──────────────────────────────────────────────
+  function renderGantt(baseline,cfg){
+    const wrap=document.getElementById('gantt-wrap');
+    if(!wrap) return;
+    const ic=(D&&D.informe_cliente)||null;
+    const sp=(ic&&ic.sprint)||{};
+    const dias=(cfg&&cfg.dias)||(sp.duracion_dias_habiles||10);
+    const startDate=cfg&&cfg.startDate?cfg.startDate:null;
+    const fechasOk=!!(cfg&&cfg.fechasDeclaradas&&startDate);
+    const dayDates=fechasOk?businessDayList(startDate,dias):[];
+    const rowH=34,barH=22,leftPad=260;
+    const dayW=fechasOk?Math.max(72,Math.floor(820/dias)):Math.max(50,Math.floor(760/dias));
+    const baselineBandH=28;
+    const headH=fechasOk?58:38;
+    let items=[];
+    if(ic&&ic.gantt_secuenciado&&ic.gantt_secuenciado.length){
+      items=ic.gantt_secuenciado.map(g=>({hu_id:g.hu_id,titulo:g.titulo||g.hu_id,dia_inicio:g.dia_inicio||1,dias:g.dias||1,nivel_calidad:g.nivel_calidad||'Buena',riesgos_criticos:g.riesgos_criticos||0,depende_de:g.depende_de||[]}));
+    } else {
+      const placed={};const order=[];const visited={};
+      function visit(id){if(visited[id])return;visited[id]=true;const b=baseline.find(x=>x.hu_id===id);if(!b)return;(b.deps||[]).forEach(d=>visit(d));order.push(b);}
+      baseline.forEach(b=>visit(b.hu_id));
+      order.forEach(b=>{let start=1;(b.deps||[]).forEach(d=>{const pp=placed[d];if(pp)start=Math.max(start,pp.start+pp.dias);});placed[b.hu_id]={start,dias:b.dias};});
+      items=baseline.map(b=>({hu_id:b.hu_id,titulo:b.titulo,dia_inicio:placed[b.hu_id].start,dias:placed[b.hu_id].dias,nivel_calidad:nivelLabel(b.cal),riesgos_criticos:b.riesgos_alta,depende_de:b.deps||[]}));
+    }
+    const nivelToColor=nv=>nv==='Excelente'?'#16A34A':nv==='Buena'?'#FF7E08':nv==='Aceptable'?'#D97706':'#DC2626';
+    const n=items.length+1;
+    const bandY=headH+4;
+    const contentTop=headH+baselineBandH+10;
+    const totalH=contentTop+n*rowH+16;
+    const totalW=leftPad+dayW*dias+20;
+    let svg='<svg viewBox="0 0 '+totalW+' '+totalH+'" width="'+totalW+'" height="'+totalH+'" style="min-width:100%;background:#0C0C0F">';
+    svg+='<defs><linearGradient id="rrBaseGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(255,126,8,.35)"/><stop offset="100%" stop-color="rgba(255,154,0,.2)"/></linearGradient></defs>';
+    svg+='<rect x="0" y="0" width="'+totalW+'" height="'+headH+'" fill="#141417"/>';
+    for(let d=1;d<=dias;d++){
+      const x=leftPad+(d-1)*dayW;
+      svg+='<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+totalH+'" stroke="#272730" opacity=".8"/>';
+      if(fechasOk&&dayDates[d-1]){
+        const dd=dayDates[d-1];
+        svg+='<text x="'+(x+dayW/2)+'" y="20" text-anchor="middle" font-size="9" font-family="Inter" fill="#5A5451" font-weight="600">'+esc(fmtDateShort(dd))+'</text>';
+        svg+='<text x="'+(x+dayW/2)+'" y="38" text-anchor="middle" font-size="11" font-family="Inter" fill="#8A8785" font-weight="700">D'+d+'</text>';
+      } else {
+        svg+='<text x="'+(x+dayW/2)+'" y="24" text-anchor="middle" font-size="11" font-family="Inter" fill="#8A8785">D'+d+'</text>';
+      }
+    }
+    svg+='<line x1="'+leftPad+'" y1="0" x2="'+leftPad+'" y2="'+totalH+'" stroke="#333340" stroke-width="2"/>';
+    // Baseline band
+    const baseX=leftPad+4,baseW=dias*dayW-8;
+    svg+='<rect x="0" y="'+headH+'" width="'+totalW+'" height="'+(baselineBandH+10)+'" fill="rgba(255,126,8,.04)"/>';
+    svg+='<text x="10" y="'+(bandY+baselineBandH/2+4)+'" font-size="10" font-family="Inter" fill="rgba(255,126,8,.65)" font-weight="700">LÍNEA BASE DEL SPRINT</text>';
+    svg+='<rect x="'+baseX+'" y="'+bandY+'" width="'+baseW+'" height="'+baselineBandH+'" rx="5" fill="url(#rrBaseGrad)" stroke="rgba(255,126,8,.5)" stroke-width="1.5"/>';
+    const s1=baseX,e1=baseX+baseW;
+    svg+='<circle cx="'+s1+'" cy="'+(bandY+baselineBandH/2)+'" r="6" fill="#FF7E08"/>';
+    svg+='<circle cx="'+e1+'" cy="'+(bandY+baselineBandH/2)+'" r="6" fill="#FF7E08"/>';
+    const lblS=fechasOk?('INICIO · '+fmtDateLong(startDate)):'INICIO · D1';
+    const lblE=fechasOk&&dayDates.length?('CIERRE · '+fmtDateLong(dayDates[dayDates.length-1])):('CIERRE · D'+dias);
+    svg+='<text x="'+(s1+10)+'" y="'+(bandY+baselineBandH/2+4)+'" font-size="9" fill="rgba(255,126,8,.85)" font-weight="700">'+esc(lblS)+'</text>';
+    svg+='<text x="'+(e1-10)+'" y="'+(bandY+baselineBandH/2+4)+'" text-anchor="end" font-size="9" fill="rgba(255,126,8,.85)" font-weight="700">'+esc(lblE)+'</text>';
+    svg+='<line x1="'+s1+'" y1="'+(bandY+baselineBandH)+'" x2="'+s1+'" y2="'+totalH+'" stroke="rgba(255,126,8,.3)" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    svg+='<line x1="'+e1+'" y1="'+(bandY+baselineBandH)+'" x2="'+e1+'" y2="'+totalH+'" stroke="rgba(255,126,8,.3)" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    // HU rows
+    items.forEach((it,i)=>{
+      const y=contentTop+i*rowH+(rowH-barH)/2;
+      const x=leftPad+(it.dia_inicio-1)*dayW+4;
+      const w=it.dias*dayW-8;
+      const color=nivelToColor(it.nivel_calidad);
+      let tipDates='';
+      if(fechasOk&&dayDates[it.dia_inicio-1]){tipDates='\n'+fmtDateLong(dayDates[it.dia_inicio-1])+' → '+fmtDateLong(dayDates[Math.min(dayDates.length-1,it.dia_inicio+it.dias-2)]);}
+      svg+='<text x="10" y="'+(y+barH/2+5)+'" font-size="11" font-family="Inter" fill="#9A9491">'+esc(it.hu_id)+' '+esc((it.titulo||'').slice(0,26))+'</text>';
+      svg+='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+barH+'" rx="5" fill="'+color+'" opacity=".85"><title>'+esc(it.hu_id)+' — '+esc(it.titulo)+'\nDía '+it.dia_inicio+' · '+it.dias+' día(s)'+tipDates+'\n'+esc(it.nivel_calidad)+' · Riesgos: '+it.riesgos_criticos+'</title></rect>';
+      if(it.riesgos_criticos>0) svg+='<text x="'+(x+w-6)+'" y="'+(y+barH/2+4)+'" text-anchor="end" font-size="11" fill="#fff">⚠</text>';
+    });
+    const byi=items.length,by=contentTop+byi*rowH+(rowH-barH)/2,bx=leftPad+(dias-1)*dayW+4,bw=dayW-8;
+    svg+='<text x="10" y="'+(by+barH/2+5)+'" font-size="11" font-family="Inter" fill="#5A5451" font-style="italic">Buffer / UAT</text>';
+    svg+='<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+barH+'" rx="5" fill="#1C1C22" stroke="#333340"/>';
+    svg+='</svg>';
+    wrap.innerHTML=svg;
+    const explainEl=document.getElementById('deps-explain');
+    if(explainEl) explainEl.innerHTML=buildDepsExplanation(items,baseline,sp,dias);
+  }
+
+  function buildDepsExplanation(items,baseline,sp,dias){
+    const historias=D.historias||[];
+    const huById={};historias.forEach(h=>huById[h.hu_id]=h);
+    const itemById={};items.forEach(it=>itemById[it.hu_id]=it);
+    const horasDia=sp.horas_dia_persona||8;
+    const capDiaria=sp.capacidad_diaria_h||(( sp.capacidad_personas||6)*horasDia);
+    const totalH2=historias.reduce((a,h)=>a+(h.estimacion_total_horas||0),0);
+    const capTotal=capDiaria*(dias-1);
+    const utilPct=capTotal>0?(totalH2/capTotal*100):0;
+    const allRoles=[...new Set(baseline.flatMap(b=>Object.keys(b.dist||{})))];
+    const peakByRol={};
+    allRoles.forEach(rol=>{
+      let peak=0;
+      for(let d=1;d<=dias;d++){
+        const activos=baseline.filter(b=>{const dRol=(b.diasPorRol||{})[rol]||0;if(!dRol)return false;const it=itemById[b.hu_id];if(!it)return false;return d>=it.dia_inicio&&d<it.dia_inicio+dRol;}).length;
+        if(activos>peak)peak=activos;
+      }
+      if(peak>0)peakByRol[rol]=peak;
+    });
+    const rolOrder=['DEV','FE','QA','DB','DEVOPS','UX'];
+    const sortedRoles=[...new Set([...rolOrder,...Object.keys(peakByRol)])].filter(r=>peakByRol[r]);
+    const teamHtml=sortedRoles.length?sortedRoles.map(rol=>{const n=peakByRol[rol];const tH=baseline.reduce((s,b)=>s+((b.dist||{})[rol]||0),0);return'<div class="kpi"><div class="kpi-label">'+esc(rol)+'</div><div class="kpi-value">'+n+'</div><div class="kpi-hint">'+tH.toFixed(0)+' h sprint</div></div>';}).join(''):'<p style="font-size:.82rem;color:var(--color-text-muted)">Sin datos de rol.</p>';
+    const ragUtil=utilPct<=90?'#16A34A':utilPct<=105?'#D97706':'#DC2626';
+    return'<div style="margin-top:var(--space-5);padding-top:var(--space-4);border-top:1px dashed var(--color-border)">'+
+      '<h3 style="font-size:.95rem;margin-bottom:var(--space-2)">👥 Equipo mínimo requerido</h3>'+
+      '<div class="summary-grid" style="margin-bottom:var(--space-3)">'+teamHtml+'</div>'+
+      '<div class="summary-grid">'+
+        '<div class="kpi"><div class="kpi-label">Esfuerzo total</div><div class="kpi-value">'+totalH2.toFixed(0)+' h</div></div>'+
+        '<div class="kpi"><div class="kpi-label">Sprint</div><div class="kpi-value">'+dias+' días</div></div>'+
+        '<div class="kpi" style="border-left:3px solid '+ragUtil+'"><div class="kpi-label">Utilización</div><div class="kpi-value">'+utilPct.toFixed(0)+'%</div><div class="kpi-hint">esfuerzo / capacidad</div></div>'+
+      '</div>'+
+      (utilPct>100?'<div class="callout callout-orange" style="margin-top:var(--space-3)"><strong>⚠ Alerta de capacidad:</strong> el esfuerzo supera la capacidad teórica. Considera ampliar el equipo o mover HUs.</div>':'')+'</div>';
+  }
+
+  // ── PMO quick Markdown ─────────────────────────────────
+  function buildPmoMd(){
+    const evm=loadEvm();
+    const state=loadState();
+    const historias=D.historias||[];
+    const cfg=D.config||{};
+    const meta=D.meta||{};
+    const proyNombre=cfg.proyecto_nombre||meta.proyecto||SPRINT_ID;
+    const totalHoras=(D.metricas_sprint&&D.metricas_sprint.total_horas)||0;
+    const bacCop=totalHoras*HOURLY_RATE;
+    const snaps=evm.snapshots||[];
+    const last=snaps.length?snaps[snaps.length-1]:null;
+    let ap=0,rj=0,pd=0;
+    historias.forEach(h=>{const st=(state[h.hu_id]||{}).status||'pendiente';if(st==='aprobada')ap++;else if(st==='rechazada')rj++;else pd++;});
+
+    let pvH='—',evH='—',acH='—',cpiS='—',spiS='—',evPct='—',eacH='—';
+    if(last){
+      const ev=+last.ev||0,ac=+last.ac||0,pv=+last.pv||0;
+      pvH=(bacCop>0?(pv/HOURLY_RATE).toFixed(1):pv.toFixed(1));
+      evH=(bacCop>0?(ev/HOURLY_RATE).toFixed(1):ev.toFixed(1));
+      acH=(bacCop>0?(ac/HOURLY_RATE).toFixed(1):ac.toFixed(1));
+      cpiS=ac>0?(ev/ac).toFixed(2):'—';
+      spiS=pv>0?(ev/pv).toFixed(2):'—';
+      evPct=bacCop>0?((ev/bacCop)*100).toFixed(1)+'%':'—';
+      eacH=(ac>0&&ev>0)?(bacCop*ac/ev/HOURLY_RATE).toFixed(1)+' h':'—';
+    }
+
+    const critLines=[];
+    historias.forEach(h=>{
+      const riskSt=(state[h.hu_id]||{}).risks||{};
+      (h.riesgos||[]).forEach(r=>{
+        const g=(riskSt[r.riesgo_id]&&riskSt[r.riesgo_id].gravedad)||r.gravedad||1;
+        const p=(riskSt[r.riesgo_id]&&riskSt[r.riesgo_id].probabilidad_riesgo)||r.probabilidad_riesgo||1;
+        const cerrado=riskSt[r.riesgo_id]&&riskSt[r.riesgo_id].cerrado;
+        if(!cerrado){const nv=risicarNivel(g,p);if(nv.val>=10)critLines.push('• ['+h.hu_id+'] '+nv.label+' ('+nv.val+') — '+r.descripcion+' | '+( r.mitigacion||r.estrategia_respuesta||'—'));}
+      });
+    });
+
+    const today=new Date().toISOString().slice(0,10);
+    const lines=[];
+    lines.push('# Bitácora Semanal PMO — '+proyNombre);
+    lines.push('');
+    lines.push('> **Generado automáticamente por Requirement Refinator**  ');
+    lines.push('> **Fecha:** '+today+' · **Sprint:** '+SPRINT_ID);
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## 1. Identificación');
+    lines.push('');
+    lines.push('| Campo | Valor |');
+    lines.push('|-------|-------|');
+    lines.push('| **Fecha** | '+today+' |');
+    lines.push('| **Proyecto** | '+proyNombre+' |');
+    lines.push('| **Sprint** | '+SPRINT_ID+' |');
+    lines.push('| **Generado por** | Requirement Refinator |');
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## 2. Estado HITL del Refinamiento');
+    lines.push('');
+    lines.push('| Estado | Cantidad |');
+    lines.push('|--------|---------|');
+    lines.push('| Aprobadas | '+ap+' |');
+    lines.push('| Rechazadas | '+rj+' |');
+    lines.push('| Pendientes | '+pd+' |');
+    lines.push('| **Total HUs** | **'+historias.length+'** |');
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## 3. Métricas de Valor Ganado (EVM)');
+    lines.push('');
+    lines.push('| Indicador | Valor |');
+    lines.push('|-----------|-------|');
+    lines.push('| BAC (total) | '+totalHoras.toFixed(1)+' h |');
+    lines.push('| PV — Planificado | '+pvH+' h |');
+    lines.push('| EV — Ganado | '+evH+' h |');
+    lines.push('| AC — Costo Real | '+acH+' h |');
+    lines.push('| CPI | '+cpiS+' |');
+    lines.push('| SPI | '+spiS+' |');
+    lines.push('| % Completado | '+evPct+' |');
+    lines.push('| EAC proyectado | '+eacH+' |');
+    lines.push('| Última medición | '+(last?last.fecha:'Sin mediciones')+' |');
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## 4. Riesgos Críticos / Inaceptables Activos');
+    lines.push('');
+    lines.push(critLines.length?critLines.join('\n'):'_Sin riesgos Críticos/Inaceptables activos._');
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('## 5. Avances / Compromisos');
+    lines.push('');
+    lines.push('_[Completar manualmente]_');
+    lines.push('');
+    lines.push('---');
+    lines.push('');
+    lines.push('*Bitácora generada por Requirement Refinator · ISO/IEC 29148 · ISO/IEC 25010 · PMI-PMBOK 7*');
+    return lines.join('\n');
+  }
+
+  // ── PMO PDF Report ─────────────────────────────────────
+  function printPmoReport(){
+    const evm=loadEvm(); const state=loadState();
+    const historias=D.historias||[];
+    const cfg=D.config||{}; const proyNombre=cfg.proyecto_nombre||SPRINT_ID;
+    const totalHoras=(D.metricas_sprint&&D.metricas_sprint.total_horas)||0;
+    const bacCop=totalHoras*HOURLY_RATE;
+    const snaps=evm.snapshots||[]; const last=snaps.length?snaps[snaps.length-1]:null;
+    let pvH='—',evH='—',acH='—',cpiS='—',spiS='—',evPct='—',eacH='—';
+    if(last){const ev=+last.ev||0,ac=+last.ac||0,pv=+last.pv||0;pvH=(pv/HOURLY_RATE).toFixed(1);evH=(ev/HOURLY_RATE).toFixed(1);acH=(ac/HOURLY_RATE).toFixed(1);cpiS=ac>0?(ev/ac).toFixed(2):'—';spiS=pv>0?(ev/pv).toFixed(2):'—';evPct=bacCop>0?((ev/bacCop)*100).toFixed(1)+'%':'—';eacH=(ac>0&&ev>0)?(bacCop*ac/ev/HOURLY_RATE).toFixed(1)+' h':'—';}
+    // Top-5 most severe active risks sorted by nivel_riesgo_valor desc
+    const allRisks=[];
+    historias.forEach(h=>{
+      const riskSt=(state[h.hu_id]||{}).risks||{};
+      (h.riesgos||[]).forEach(r=>{
+        const g=(riskSt[r.riesgo_id]&&riskSt[r.riesgo_id].gravedad)||r.gravedad||1;
+        const p=(riskSt[r.riesgo_id]&&riskSt[r.riesgo_id].probabilidad_riesgo)||r.probabilidad_riesgo||1;
+        const cerrado=riskSt[r.riesgo_id]&&riskSt[r.riesgo_id].cerrado;
+        if(!cerrado){const nv=risicarNivel(g,p);allRisks.push({hu_id:h.hu_id,id:r.riesgo_id,nivel:nv,desc:r.descripcion,mit:r.mitigacion||r.estrategia_respuesta||'—',responsable:r.responsable||'—'});}
+      });
+    });
+    allRisks.sort((a,b)=>b.nivel.val-a.nivel.val);
+    const top5=allRisks.slice(0,5);
+    // Capture chart image if available
+    const chartCanvas=document.getElementById('evm-chart');
+    const chartImg=chartCanvas&&window._rrChart?chartCanvas.toDataURL('image/png'):'';
+    const today=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
+    const CSS='*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,-apple-system,sans-serif;background:#FAF8F6;color:#111110;padding:2rem;max-width:920px;margin:0 auto;line-height:1.55;font-size:14px}'+
+      'h1{font-size:1.6rem;font-weight:700;color:#000;margin-bottom:.25rem}'+
+      'h2{font-size:1.05rem;font-weight:700;color:#FF7E08;margin:1.5rem 0 .5rem;border-bottom:2px solid #FF7E08;padding-bottom:.25rem}'+
+      '.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid #FF7E08}'+
+      '.brand{font-size:.75rem;text-align:right;color:#6B6560}.brand strong{color:#FF7E08;display:block;font-size:.9rem}'+
+      'table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:.86rem}'+
+      'th{background:#F5F2EF;padding:8px 10px;text-align:left;font-weight:700;border-bottom:2px solid #E8E2DA;font-size:.75rem;text-transform:uppercase;letter-spacing:.3px;color:#6B6560}'+
+      'td{padding:7px 10px;border-bottom:1px solid #E8E2DA;vertical-align:top}tr:nth-child(even) td{background:#FAFAF8}'+
+      '.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:700;text-transform:uppercase}'+
+      '.badge-red{background:#FEE2E2;color:#DC2626;border:1px solid #FCA5A5}.badge-amber{background:#FEF3C7;color:#D97706;border:1px solid #FCD34D}'+
+      '.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.75rem;margin-bottom:1rem}'+
+      '.kpi{background:#fff;border:1px solid #E8E2DA;border-radius:8px;padding:.75rem;border-left:3px solid #FF7E08}'+
+      '.kpi-label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6B6560}'+
+      '.kpi-value{font-size:1.4rem;font-weight:700;margin-top:.15rem;color:#111}.kpi-hint{font-size:.68rem;color:#A09890}'+
+      '.chart-wrap{margin:1rem 0;border:1px solid #E8E2DA;border-radius:8px;overflow:hidden;background:#fff;padding:.5rem}'+
+      '.chart-wrap img{width:100%;height:auto;display:block}'+
+      'footer{margin-top:2rem;padding-top:1rem;border-top:1px solid #E8E2DA;font-size:.72rem;color:#A09890;text-align:center}'+
+      '@media print{body{padding:1cm;background:#fff}.chart-wrap{break-inside:avoid}@page{margin:1.5cm;size:A4 portrait}}';
+    const html='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bitácora PMO — '+proyNombre+'</title>'+
+      '<style>'+CSS+'</style>'+
+      '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">'+
+      '</head><body>'+
+      '<div class="header">'+
+        '<div><h1>Bitácora Semanal PMO</h1><p style="color:#6B6560;font-size:.9rem">'+esc(proyNombre)+' · '+SPRINT_ID+'</p></div>'+
+        '<div class="brand"><strong>Sofka Technologies</strong>Requirement Refinator · '+today+'</div>'+
+      '</div>'+
+      '<h2>1. Métricas de Valor Ganado (EVM)</h2>'+
+      '<div class="kpi-grid">'+
+        '<div class="kpi"><div class="kpi-label">BAC</div><div class="kpi-value">'+totalHoras.toFixed(0)+' h</div><div class="kpi-hint">presupuesto</div></div>'+
+        '<div class="kpi"><div class="kpi-label">PV</div><div class="kpi-value">'+pvH+' h</div><div class="kpi-hint">planificado</div></div>'+
+        '<div class="kpi"><div class="kpi-label">EV</div><div class="kpi-value">'+evH+' h</div><div class="kpi-hint">ganado</div></div>'+
+        '<div class="kpi"><div class="kpi-label">AC</div><div class="kpi-value">'+acH+' h</div><div class="kpi-hint">costo real</div></div>'+
+        '<div class="kpi"><div class="kpi-label">CPI</div><div class="kpi-value" style="color:'+(cpiS!=='—'&&+cpiS>=0.95?'#16A34A':+cpiS>=0.85?'#D97706':'#DC2626')+'">'+cpiS+'</div><div class="kpi-hint">eficiencia costo</div></div>'+
+        '<div class="kpi"><div class="kpi-label">SPI</div><div class="kpi-value" style="color:'+(spiS!=='—'&&+spiS>=0.95?'#16A34A':+spiS>=0.85?'#D97706':'#DC2626')+'">'+spiS+'</div><div class="kpi-hint">eficiencia tiempo</div></div>'+
+        '<div class="kpi"><div class="kpi-label">% Completado</div><div class="kpi-value">'+evPct+'</div></div>'+
+        '<div class="kpi"><div class="kpi-label">EAC proyectado</div><div class="kpi-value">'+eacH+'</div></div>'+
+      '</div>'+
+      (chartImg?'<div class="chart-wrap"><img src="'+chartImg+'" alt="Gráfico EVM"></div>':'')+
+      '<h2>2. Historial de Mediciones EVM</h2>'+
+      (snaps.length?
+        '<table><thead><tr><th>#</th><th>Fecha</th><th>PV (h)</th><th>EV (h)</th><th>AC (h)</th><th>CPI</th><th>SPI</th><th>Notas</th></tr></thead><tbody>'+
+          snaps.map((s,i)=>{const pv=+s.pv||0,ev=+s.ev||0,ac=+s.ac||0;const cpi_=ac>0?(ev/ac).toFixed(2):'—';const spi_=pv>0?(ev/pv).toFixed(2):'—';
+            return'<tr><td>'+(i+1)+'</td><td>'+esc(s.fecha||'')+'</td><td>'+(pv/HOURLY_RATE).toFixed(1)+'</td><td>'+(ev/HOURLY_RATE).toFixed(1)+'</td><td>'+(ac/HOURLY_RATE).toFixed(1)+'</td>'+
+              '<td style="color:'+(+cpi_>=0.95?'#16A34A':+cpi_>=0.85?'#D97706':'#DC2626')+'">'+cpi_+'</td>'+
+              '<td style="color:'+(+spi_>=0.95?'#16A34A':+spi_>=0.85?'#D97706':'#DC2626')+'">'+spi_+'</td>'+
+              '<td>'+esc(s.notas||'')+'</td></tr>';
+          }).join('')+
+        '</tbody></table>'
+      :'<p style="color:#6B6560">Sin mediciones registradas aún.</p>')+
+      '<h2>3. Top 5 Riesgos Activos (por severidad)</h2>'+
+      (top5.length?
+        '<table><thead><tr><th>HU</th><th>ID</th><th>Nivel</th><th>G×P</th><th>Descripción</th><th>Mitigación</th><th>Responsable</th></tr></thead><tbody>'+
+          top5.map(c=>{const cls=c.nivel.val>=15?'badge-red':'badge-amber';
+            return'<tr><td>'+esc(c.hu_id)+'</td><td>'+esc(c.id)+'</td><td><span class="badge '+cls+'">'+c.nivel.label+'</span></td><td><strong>'+c.nivel.val+'</strong></td><td>'+esc(c.desc)+'</td><td>'+esc(c.mit)+'</td><td>'+esc(c.responsable)+'</td></tr>';
+          }).join('')+
+        '</tbody></table>'+
+        (allRisks.length>5?'<p style="font-size:.76rem;color:#6B6560;margin-top:.5rem">'+allRisks.length+' riesgos activos en total. Se muestran los 5 de mayor severidad.</p>':'')
+      :'<p style="color:#16A34A;font-weight:600">✓ Sin riesgos activos en el sprint.</p>')+
+      '<h2>4. Avances y Compromisos</h2>'+
+      '<p style="color:#6B6560;font-style:italic">[Completar manualmente antes de distribuir]</p>'+
+      '<footer><strong>Requirement Refinator</strong> · ISO/IEC 29148:2018 · ISO/IEC 25010 · PMI-PMBOK 7<br>© Sofka Technologies 2026 · Creado por Mauricio Sepúlveda Henao con Claude Code, Antigravity, Gemini y NotebookLM</footer>'+
+      '<script>window.addEventListener("load",function(){window.print();});<\/script>'+
+      '</body></html>';
+    const w=window.open('','_blank','width=1100,height=820,scrollbars=yes');
+    if(w){w.document.write(html);w.document.close();}
+    else{alert('Popup bloqueado. Permite ventanas emergentes para este sitio.');
+      download(SPRINT_ID+'-bitacora-'+new Date().toISOString().slice(0,10)+'.html',html,'text/html');}
+  }
+
+  // ── View switching ─────────────────────────────────────
+  function showView(name){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const v=document.getElementById('view-'+name);
+    if(v) v.classList.add('active');
+    document.querySelectorAll('.tab[data-view]').forEach(t=>{
+      const active=t.dataset.view===name;
+      t.classList.toggle('active',active);
+      t.setAttribute('aria-selected',active?'true':'false');
+    });
+    currentView=name;
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  // ── Markdown export/import ─────────────────────────────
+  function buildStatePayload(){
+    return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm()};
+  }
+  function parseStatePayload(mdText){
+    const re=/<!--\s*RR-STATE-BEGIN\s*-->[\s\S]*?```json\s*([\s\S]*?)\s*```[\s\S]*?<!--\s*RR-STATE-END\s*-->/;
+    const m=mdText.match(re);
+    if(!m)return null;
+    try{return JSON.parse(m[1]);}catch(e){return null;}
+  }
+  function applyStatePayload(payload){
+    if(!payload)return{ok:false};
+    if(payload.sprint_id&&payload.sprint_id!==SPRINT_ID){if(!confirm('El archivo pertenece a '+payload.sprint_id+' pero estás en '+SPRINT_ID+'. ¿Importar?'))return{ok:false};}
+    if(payload.hitl)localStorage.setItem(LS_KEY,JSON.stringify(payload.hitl));
+    if(payload.evm)localStorage.setItem(EVM_KEY,JSON.stringify(payload.evm));
+    return{ok:true};
+  }
+  function handleImportFile(file,rerender){
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const payload=parseStatePayload(String(reader.result||''));
+      if(!payload){flash('No se encontró bloque RR-STATE en el Markdown');return;}
+      const res=applyStatePayload(payload);
+      if(res.ok){
+        const nH=Object.keys(payload.hitl||{}).length;
+        const nE=((payload.evm||{}).snapshots||[]).length;
+        flash('Importado: '+nH+' HUs · '+nE+' mediciones');
+        markClean();
+        if(rerender)rerender();
+      }
+    };
+    reader.readAsText(file);
+  }
+  function buildMarkdown(){
+    const state=loadState();
+    const evm=loadEvm();
+    const historias=D.historias||[];
+    const lines=[];
+    lines.push('# Respaldo HITL + EVM — '+SPRINT_ID);
+    lines.push('');
+    lines.push('> Generado: '+new Date().toISOString());
+    lines.push('> Proyecto: '+((D.config&&D.config.proyecto_nombre)||'—'));
+    lines.push('');
+    let ap=0,rj=0,pd=0;
+    historias.forEach(h=>{const st=(state[h.hu_id]||{}).status||'pendiente';if(st==='aprobada')ap++;else if(st==='rechazada')rj++;else pd++;});
+    lines.push('## Resumen HITL');
+    lines.push('- Aprobadas: '+ap);
+    lines.push('- Rechazadas: '+rj);
+    lines.push('- Pendientes: '+pd);
+    lines.push('');
+    historias.forEach(h=>{
+      const s=state[h.hu_id]||{};
+      const st=s.status||'pendiente';
+      lines.push('---');
+      lines.push('## '+h.hu_id+' — '+(h.titulo_mejorado||h.titulo_original||''));
+      lines.push('- Estado PM: **'+st.toUpperCase()+'**');
+      lines.push('- Diagnóstico: '+h.calificacion_iso+' / 5 ('+nivelLabel(h.calificacion_iso||0)+')');
+      if(s.feedback){lines.push('');lines.push('### Feedback');lines.push(s.feedback);}
+      if(s.answers&&Object.keys(s.answers).length){lines.push('');lines.push('### Respuestas HITL');(h.preguntas_clarificacion||[]).forEach(q=>{const a=s.answers[q.id];if(a)lines.push('- **'+q.id+'** — '+q.pregunta+' → '+a);});}
+      if(s.pert&&Object.keys(s.pert).length){lines.push('');lines.push('### PERT ajustado');Object.keys(s.pert).forEach(tid=>{const p=s.pert[tid];const e=(((+p.o||0)+4*(+p.p||0)+(+p.pe||0))/6).toFixed(2);lines.push('- '+tid+': O='+p.o+' P='+p.p+' Pe='+p.pe+' → E='+e+'h');});}
+      lines.push('');
+    });
+    const snaps=(evm&&evm.snapshots)||[];
+    lines.push('---');
+    lines.push('## Avance del Sprint — Historial EVM');
+    lines.push('- Mediciones: '+snaps.length);
+    if(snaps.length){lines.push('');lines.push('| # | Fecha | PV | EV | AC | CPI | SPI | Notas |');lines.push('|---|-------|-----|-----|-----|-----|-----|-------|');snaps.forEach((s,i)=>{const pv=+s.pv||0,ev=+s.ev||0,ac=+s.ac||0;const cpi=ac>0?(ev/ac).toFixed(2):'—';const spi=pv>0?(ev/pv).toFixed(2):'—';lines.push('| '+(i+1)+' | '+(s.fecha||'')+' | '+pv+' | '+ev+' | '+ac+' | '+cpi+' | '+spi+' | '+(s.notas||'').replace(/\|/g,'\\|')+' |');});}
+    lines.push('');
+    lines.push('---');
+    lines.push('<!-- RR-STATE-BEGIN -->');
+    lines.push('<!-- No elimines este bloque: contiene el estado completo para reimportar. -->');
+    lines.push('```json');
+    lines.push(JSON.stringify(buildStatePayload(),null,2));
+    lines.push('```');
+    lines.push('<!-- RR-STATE-END -->');
+    return lines.join('\n');
+  }
+  function download(filename,content,type){
+    const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},0);
+  }
+  function downloadBackup(){
+    download(SPRINT_ID+'-respaldo-'+(new Date().toISOString().slice(0,10))+'.md',buildMarkdown(),'text/markdown');
+    flash('Respaldo descargado');
+    markClean();
+  }
+
+  // ── Toast ──────────────────────────────────────────────
+  function flash(msg){
+    let t=document.getElementById('rr-toast');
+    if(!t){t=document.createElement('div');t.id='rr-toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#FF7E08;color:#fff;padding:.65rem 1.2rem;border-radius:10px;font-size:.84rem;box-shadow:0 8px 24px rgba(255,126,8,.4);z-index:9999;opacity:0;transition:opacity .2s ease;font-family:Inter,sans-serif;font-weight:600';document.body.appendChild(t);}
+    t.textContent=msg;t.style.opacity='1';
+    clearTimeout(t._h);t._h=setTimeout(()=>{t.style.opacity='0';},2400);
+  }
+
+  // ── Wire up ─────────────────────────────────────────────
+  document.querySelectorAll('.tab[data-view]').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      const name=tab.dataset.view;
+      if(name==='progress') renderProgress();
+      if(name==='dashboard') renderDashboard();
+      showView(name);
+      if(guideOpen) openGuide(name);
+    });
+  });
+  // Ensure view-guia exists (static HTML, no render needed)
+
+  const reportsWrap=document.getElementById('tab-reports-wrap');
+  document.getElementById('tab-reports').addEventListener('click',e=>{e.stopPropagation();reportsWrap.classList.toggle('open');});
+  document.addEventListener('click',()=>reportsWrap.classList.remove('open'));
+  document.querySelectorAll('#tab-reports-wrap .tab-menu button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const r=b.dataset.report;
+      if(r==='export-md') downloadBackup();
+      else if(r==='import-md'){const inp=document.createElement('input');inp.type='file';inp.accept='.md,.markdown,text/plain';inp.onchange=e=>{const f=e.target.files[0];if(f)handleImportFile(f,()=>{renderDashboard();showView('dashboard');});};inp.click();}
+      else if(r==='export-json'){download(SPRINT_ID+'-state.json',JSON.stringify(buildStatePayload(),null,2),'application/json');flash('JSON exportado');}
+      else if(r==='pdf') window.print();
+    });
+  });
+  document.getElementById('bb-download').addEventListener('click',downloadBackup);
+  document.getElementById('bb-dismiss').addEventListener('click',()=>document.getElementById('backup-banner').classList.remove('visible'));
+
+  // ── Boot ───────────────────────────────────────────────
+  if(isEmpty()){showView('empty');renderEmpty();}
+  else{renderDashboard();showView('dashboard');}
+  updateBanner();
+  initProgressSubTabs(null,null,null,null,null);
+})();
+</script>
+</body>
+</html>

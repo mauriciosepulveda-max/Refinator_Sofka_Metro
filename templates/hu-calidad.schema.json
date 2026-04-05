@@ -1,0 +1,313 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "hu-calidad.schema.json",
+  "title": "Historia de Usuario — Schema de Calidad ISO",
+  "description": "Contrato de output para el análisis completo de una HU. Conforme con ISO/IEC/IEEE 29148:2018 e ISO/IEC 25010. Todos los campos 'required' son BLOQUEANTES.",
+  "normativas": ["ISO/IEC/IEEE 29148:2018", "ISO/IEC 25010", "INVEST"],
+  "type": "object",
+  "required": [
+    "hu_id",
+    "titulo_original",
+    "titulo_mejorado",
+    "narrativa_original",
+    "narrativa_refinada",
+    "narrativa_completa",
+    "criteriosOriginales",
+    "criteriosAceptacion",
+    "invest",
+    "invest_score_raw",
+    "invest_score_norm",
+    "iso29148",
+    "iso29148_score_raw",
+    "iso29148_score_norm",
+    "iso25010_cobertura",
+    "iso25010_aplicables",
+    "iso25010_cubiertas",
+    "iso25010_score_norm",
+    "calificacion_iso",
+    "calificacion_nivel",
+    "calificacion_accion",
+    "tareas",
+    "estimacion_total_horas",
+    "riesgos",
+    "dependencias",
+    "preguntas_clarificacion"
+  ],
+  "properties": {
+    "hu_id": {
+      "type": "string",
+      "description": "Identificador único e inmutable de la HU. ISO 29148 §5.2.8: nunca reutilizar.",
+      "pattern": "^[A-Z0-9_-]+$",
+      "examples": ["US-01", "HU-1425", "HU-FE-ARAUCA"]
+    },
+    "titulo_original": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Título original del documento fuente — NO modificar."
+    },
+    "titulo_mejorado": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 80,
+      "description": "Título mejorado — funcional, sin términos técnicos, máx. 80 chars."
+    },
+    "narrativa_original": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Texto COMPLETO e ÍNTEGRO del documento fuente. NUNCA resumir. ISO 29148: Correcto."
+    },
+    "narrativa_refinada": {
+      "type": "object",
+      "required": ["rol", "accion", "beneficio"],
+      "properties": {
+        "rol": { "type": "string", "minLength": 3 },
+        "accion": { "type": "string", "minLength": 5 },
+        "beneficio": { "type": "string", "minLength": 10 }
+      }
+    },
+    "narrativa_completa": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Como [rol], quiero [acción], para [beneficio]."
+    },
+    "criteriosOriginales": {
+      "type": "array",
+      "minItems": 1,
+      "description": "CAs originales copiados TEXTUALMENTE del documento fuente. NUNCA vaciar este array. Regla 13.",
+      "items": { "type": "string", "minLength": 5 }
+    },
+    "criteriosAceptacion": {
+      "type": "array",
+      "minItems": 5,
+      "description": "Escenarios Gherkin ISO-29148 compliant. Mínimo 5. Deben cubrir TODOS los criteriosOriginales.",
+      "items": {
+        "type": "object",
+        "required": ["escenario_id", "nombre", "tipo", "ca_original_referenciado", "iso29148_checks", "gherkin"],
+        "properties": {
+          "escenario_id": { "type": "string", "pattern": "^CA-" },
+          "nombre": { "type": "string", "minLength": 5 },
+          "tipo": { "type": "string", "enum": ["happy_path", "unhappy_path", "alternativo", "edge_case", "regresion"] },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "ca_original_referenciado": { "type": "string" },
+          "iso29148_checks": {
+            "type": "object",
+            "required": ["verificable", "singular", "inequivoco", "completo", "apropiado"],
+            "properties": {
+              "verificable": { "type": "boolean" },
+              "singular":    { "type": "boolean" },
+              "inequivoco":  { "type": "boolean" },
+              "completo":    { "type": "boolean" },
+              "apropiado":   { "type": "boolean" }
+            }
+          },
+          "gherkin": { "type": "string", "minLength": 50 }
+        }
+      }
+    },
+    "invest": {
+      "type": "object",
+      "required": ["independiente", "negociable", "valiosa", "estimable", "small", "testeable"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["estado", "nota", "peso"],
+        "properties": {
+          "estado": { "type": "string", "enum": ["CUMPLE", "PARCIAL", "NO_CUMPLE"] },
+          "nota":   { "type": "string", "minLength": 5 },
+          "peso":   { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "invest_score_raw":  { "type": "number", "minimum": 0, "maximum": 6 },
+    "invest_score_norm": { "type": "number", "minimum": 0, "maximum": 1 },
+    "iso29148": {
+      "type": "object",
+      "required": ["necesario", "apropiado", "inequivoco", "completo", "singular", "factible", "verificable", "correcto", "conforme"],
+      "description": "9 características del requisito — ISO/IEC/IEEE 29148:2018 Cláusula 5.2.5",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["estado", "nota", "peso"],
+        "properties": {
+          "estado": { "type": "string", "enum": ["CUMPLE", "PARCIAL", "NO_CUMPLE"] },
+          "nota":   { "type": "string", "minLength": 5 },
+          "peso":   { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "iso29148_score_raw":  { "type": "number", "minimum": 0, "maximum": 9 },
+    "iso29148_score_norm": { "type": "number", "minimum": 0, "maximum": 1 },
+    "iso25010_cobertura": {
+      "type": "object",
+      "description": "Cobertura de las 8 características de calidad ISO/IEC 25010",
+      "required": [
+        "adecuacion_funcional",
+        "eficiencia_desempeno",
+        "compatibilidad",
+        "usabilidad",
+        "fiabilidad",
+        "seguridad",
+        "mantenibilidad",
+        "portabilidad"
+      ],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["aplicable", "cubierta", "nota"],
+        "properties": {
+          "aplicable": { "type": "boolean" },
+          "cubierta":  { "type": "boolean" },
+          "nota":      { "type": "string" }
+        }
+      }
+    },
+    "iso25010_aplicables": { "type": "integer", "minimum": 0, "maximum": 8 },
+    "iso25010_cubiertas":  { "type": "integer", "minimum": 0, "maximum": 8 },
+    "iso25010_score_norm": { "type": "number", "minimum": 0, "maximum": 1 },
+    "calificacion_iso": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Calificación final 0–5. Fórmula: (iso29148_norm*0.5 + invest_norm*0.3 + iso25010_norm*0.2) * 5"
+    },
+    "calificacion_nivel": {
+      "type": "string",
+      "enum": ["Excelente", "Buena", "Aceptable", "Deficiente", "Crítica"],
+      "description": "Excelente(≥4.5) / Buena(3.5–4.4) / Aceptable(2.5–3.4) / Deficiente(1.5–2.4) / Crítica(<1.5)"
+    },
+    "calificacion_accion": {
+      "type": "string",
+      "description": "Acción recomendada según el nivel"
+    },
+    "tareas": {
+      "type": "array",
+      "minItems": 2,
+      "description": "Mínimo 2 tareas (1 DEV + 1 QA). Regla 14: DoD obligatorio. Regla 15: PERT triple.",
+      "items": {
+        "type": "object",
+        "required": ["tarea_id", "descripcion", "dod", "tipo", "estimacion_o", "estimacion_p", "estimacion_pe", "estimacion_pert", "complejidad", "justificacion"],
+        "properties": {
+          "tarea_id":      { "type": "string", "pattern": "^T-" },
+          "descripcion":   { "type": "string", "minLength": 10 },
+          "dod":           { "type": "string", "minLength": 15, "description": "DoD: criterio concreto y verificable. NUNCA vacío." },
+          "tipo":          { "type": "string", "enum": ["DEV", "FE", "QA", "DB", "DEVOPS", "UX"] },
+          "estimacion_o":  { "type": "number", "minimum": 0.5, "maximum": 16 },
+          "estimacion_p":  { "type": "number", "minimum": 0.5, "maximum": 16 },
+          "estimacion_pe": { "type": "number", "minimum": 0.5, "maximum": 16 },
+          "estimacion_pert": { "type": "number", "minimum": 0.5, "maximum": 16 },
+          "complejidad":   { "type": "string", "enum": ["Alta", "Media", "Baja"] },
+          "justificacion": { "type": "string", "minLength": 10 },
+          "iso25010_categoria": { "type": ["string", "null"] },
+          "completada":    { "type": "boolean" }
+        }
+      }
+    },
+    "tareas_iso25010": {
+      "type": "array",
+      "description": "Tareas NFR de calidad ISO 25010 identificadas para características aplicables no cubiertas",
+      "items": {
+        "type": "object",
+        "required": ["caracteristica", "tarea_id", "razon"],
+        "properties": {
+          "caracteristica": { "type": "string" },
+          "tarea_id": { "type": "string" },
+          "razon": { "type": "string" }
+        }
+      }
+    },
+    "estimacion_total_horas": { "type": "number", "minimum": 0 },
+    "distribucion_por_tipo": {
+      "type": "object",
+      "properties": {
+        "DEV":    { "type": "number", "minimum": 0 },
+        "FE":     { "type": "number", "minimum": 0 },
+        "QA":     { "type": "number", "minimum": 0 },
+        "DB":     { "type": "number", "minimum": 0 },
+        "DEVOPS": { "type": "number", "minimum": 0 },
+        "UX":     { "type": "number", "minimum": 0 }
+      }
+    },
+    "riesgos": {
+      "type": "array",
+      "description": "Matriz de riesgos estructurada con metodología RISICAR (DAFP Colombia).",
+      "items": {
+        "type": "object",
+        "required": ["riesgo_id", "tipologia", "descripcion", "causa", "consecuencia", "gravedad", "probabilidad_riesgo", "nivel_riesgo_valor", "nivel_riesgo_label", "estrategia_respuesta", "mitigacion"],
+        "properties": {
+          "riesgo_id":            { "type": "string", "description": "REF/ID único del riesgo, ej. R-001." },
+          "tipologia":            { "type": "string", "enum": ["Ausentismo","Conflicto","Demora","Desacierto","Despilfarro","Deterioro","Encubrimiento","Error","Falsedad","Fraude","Incumplimiento","Inexactitud","Omisión","Paro","Ralentización","Sabotaje"] },
+          "descripcion":          { "type": "string", "minLength": 10, "description": "Descripción concisa del riesgo (qué podría ocurrir)." },
+          "ambito":               { "type": "string", "description": "Áreas potenciales de impacto (ej. 'Datos financieros · Servicio al cliente')." },
+          "agente_generador":     { "type": "string", "description": "Quién o qué genera el riesgo (actor, sistema, proceso)." },
+          "causa":                { "type": "string", "minLength": 5, "description": "Causa raíz del riesgo." },
+          "consecuencia":         { "type": "string", "minLength": 5, "description": "Consecuencia si el riesgo se materializa." },
+          "impacto_financiero":   { "type": "string", "description": "Estimado en COP o 'Por definir'." },
+          "gravedad":             { "type": "integer", "minimum": 1, "maximum": 5, "description": "1=Insignificante · 2=Menor · 3=Moderada · 4=Mayor · 5=Catastrófica" },
+          "probabilidad_riesgo":  { "type": "integer", "minimum": 1, "maximum": 5, "description": "1=Muy baja · 2=Baja · 3=Media · 4=Alta · 5=Muy alta" },
+          "nivel_riesgo_valor":   { "type": "integer", "minimum": 1, "maximum": 25, "description": "gravedad × probabilidad_riesgo" },
+          "nivel_riesgo_label":   { "type": "string", "enum": ["Tolerable","Grave","Crítico","Inaceptable"], "description": "1-4=Tolerable · 5-9=Grave · 10-14=Crítico · 15-25=Inaceptable" },
+          "estrategia_respuesta": { "type": "string", "enum": ["Aceptar el Riesgo","Proteger ante materialización","Prevenir la materialización","Eliminar causa-raíz","Retener pérdidas","Transferir el riesgo"] },
+          "mitigacion":           { "type": "string", "minLength": 10, "description": "Acciones concretas de mitigación." },
+          "responsable":          { "type": "string", "description": "Rol o persona responsable del seguimiento." },
+          "fecha_mitigacion":     { "type": "string", "description": "Fecha objetivo para completar la mitigación (YYYY-MM-DD o sprint)." },
+          "estado":               { "type": "integer", "enum": [0, 1], "default": 0, "description": "0=Abierto · 1=Cerrado" },
+          "categoria":            { "type": "string", "description": "Categoría técnica del riesgo: Técnico, Operacional, Seguridad, Rendimiento, Datos, Equipo, Timeline." },
+          "iso25010_ref":         { "type": ["string", "null"] }
+        }
+      }
+    },
+    "dependencias": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["dep_id", "tipo", "referencia", "descripcion"],
+        "properties": {
+          "dep_id":       { "type": "string" },
+          "tipo":         { "type": "string", "enum": ["Historia", "Servicio externo", "Técnica", "Normativa"] },
+          "referencia":   { "type": "string" },
+          "descripcion":  { "type": "string", "minLength": 5 },
+          "bloqueante":   { "type": "boolean" }
+        }
+      }
+    },
+    "preguntas_clarificacion": {
+      "type": "array",
+      "description": "Preguntas ISO 29148: cada una referencia el criterio que la activa",
+      "items": {
+        "type": "object",
+        "required": ["id", "pregunta", "categoria", "impacto"],
+        "properties": {
+          "id":        { "type": "string" },
+          "pregunta":  { "type": "string", "minLength": 10 },
+          "categoria": { "type": "string", "description": "Ej: 'ISO 29148: Inequívoco' o 'ISO 25010: Seguridad'" },
+          "impacto":   { "type": "string", "enum": ["Alto", "Medio", "Bajo"] }
+        }
+      }
+    },
+    "ambiguedades":  { "type": "array", "items": { "type": "string" } },
+    "incoherencias": { "type": "array", "items": { "type": "string" } },
+    "recomendacion_split": { "type": ["string", "null"] },
+    "arquetipo_usuario": { "type": "string" },
+    "valor_negocio":     { "type": "string", "enum": ["Critical", "High", "Medium", "Low"] },
+    "prioridad_moscow":  { "type": "string", "enum": ["Must", "Should", "Could", "Won't"] },
+    "story_points":      { "type": "integer", "enum": [1, 2, 3, 5, 8, 13] },
+    "epic_id":           { "type": "string" },
+    "pm_aprobada":       { "type": ["boolean", "null"] },
+    "pm_feedback":       { "type": "string" },
+    "pm_fecha_revision": { "type": ["string", "null"] },
+    "html_individual":   { "type": "string", "description": "Ruta relativa al HTML individual: <hu-id>.html" },
+    "quality_gate_failed": { "type": "boolean", "default": false },
+    "notas_analista":    { "type": "string" }
+  },
+  "quality_gates": {
+    "G1": "criteriosAceptacion.length >= criteriosOriginales.length",
+    "G2": "all tareas have non-empty dod",
+    "G3": "all tareas have estimacion_o, estimacion_p, estimacion_pe",
+    "G4": "calificacion_iso is a number between 0 and 5"
+  },
+  "calificacion_formula": "calificacion_iso = round((iso29148_score_norm * 0.50 + invest_score_norm * 0.30 + iso25010_score_norm * 0.20) * 5, 1)",
+  "calificacion_escala": {
+    "4.5-5.0": "Excelente — Lista para desarrollo",
+    "3.5-4.4": "Buena — Ajustes menores antes de aprobar",
+    "2.5-3.4": "Aceptable — Revisión requerida antes de aprobar",
+    "1.5-2.4": "Deficiente — Reescritura significativa necesaria",
+    "0.0-1.4": "Crítica — BLOQUEADA, no apta para desarrollo"
+  }
+}
