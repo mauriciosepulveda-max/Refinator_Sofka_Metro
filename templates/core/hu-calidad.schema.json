@@ -289,18 +289,141 @@
     "prioridad_moscow":  { "type": "string", "enum": ["Must", "Should", "Could", "Won't"] },
     "story_points":      { "type": "integer", "enum": [1, 2, 3, 5, 8, 13] },
     "epic_id":           { "type": "string" },
-    "pm_aprobada":       { "type": ["boolean", "null"] },
+    "pm_aprobada":       { "type": ["boolean", "null"], "description": "Legado — derivado de estado_hu === 'APROBADA'. Mantener para compatibilidad con el dashboard." },
     "pm_feedback":       { "type": "string" },
     "pm_fecha_revision": { "type": ["string", "null"] },
     "html_individual":   { "type": "string", "description": "Ruta relativa al HTML individual: <hu-id>.html" },
     "quality_gate_failed": { "type": "boolean", "default": false },
-    "notas_analista":    { "type": "string" }
+    "notas_analista":    { "type": "string" },
+
+    "confidence_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Confianza del análisis 0.0–1.0. Fórmula: (completitud_input*0.40 + iso_score_norm*0.35 + max(0, 1 - densidad_preguntas)*0.25) donde densidad_preguntas=preguntas/tareas. Umbral: ≥0.75 Confiable · 0.50–0.74 Revisar · <0.50 Requiere aclaración urgente."
+    },
+    "wsjf": {
+      "type": "object",
+      "description": "Weighted Shortest Job First — priorización por costo del retraso (SAFe). Score = (valor_negocio + urgencia_tiempo + reduccion_riesgo) / tamano_relativo.",
+      "required": ["valor_negocio_wsjf", "urgencia_tiempo", "reduccion_riesgo", "tamano_relativo", "score", "justificacion"],
+      "properties": {
+        "valor_negocio_wsjf": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Valor económico/estratégico que genera esta HU para el negocio." },
+        "urgencia_tiempo":    { "type": "integer", "minimum": 1, "maximum": 10, "description": "Penalización por retrasar esta HU (dependencias downstream, fecha límite contractual)." },
+        "reduccion_riesgo":   { "type": "integer", "minimum": 1, "maximum": 10, "description": "Cuánto riesgo técnico u operacional elimina completar esta HU pronto." },
+        "tamano_relativo":    { "type": "integer", "minimum": 1, "maximum": 13, "description": "Story points de la HU — denominador del WSJF." },
+        "score":              { "type": "number", "description": "WSJF = (valor_negocio + urgencia_tiempo + reduccion_riesgo) / tamano_relativo. Mayor score = mayor prioridad." },
+        "justificacion":      { "type": "string", "minLength": 20, "description": "Razón principal del scoring — por qué esta HU tiene esta prioridad relativa en el sprint." }
+      }
+    },
+    "estado_hu": {
+      "type": "string",
+      "enum": ["PENDIENTE", "EN_REVISION", "ACLARACION_REQUERIDA", "APROBADA", "RECHAZADA", "SPLIT_PENDIENTE"],
+      "default": "PENDIENTE",
+      "description": "Estado formal del ciclo de vida en el flujo HITL. PENDIENTE→EN_REVISION→APROBADA|RECHAZADA. ACLARACION_REQUERIDA cuando confidence_score<0.50. SPLIT_PENDIENTE cuando recomendacion_split!=null y PM no ha actuado."
+    },
+    "historial_estados": {
+      "type": "array",
+      "description": "Registro auditable de transiciones de estado de la HU. Cada entrada es inmutable.",
+      "items": {
+        "type": "object",
+        "required": ["estado", "timestamp", "actor"],
+        "properties": {
+          "estado":    { "type": "string" },
+          "timestamp": { "type": "string", "description": "ISO 8601" },
+          "actor":     { "type": "string", "description": "sistema | PM | orchestrator | hu-elicitor" },
+          "nota":      { "type": "string" }
+        }
+      }
+    },
+    "requiere_aclaracion": {
+      "type": "boolean",
+      "default": false,
+      "description": "true cuando confidence_score < 0.50. El dashboard prioriza esta HU en el HITL queue con badge de alerta."
+    },
+    "estimacion_incoherente": {
+      "type": "boolean",
+      "default": false,
+      "description": "true cuando el ratio story_points:estimacion_total_horas está fuera del rango esperado (3–8h/SP). Indica posible sub o sobreestimación."
+    },
+    "elicitacion_gaps": {
+      "type": "array",
+      "description": "Gaps críticos detectados por hu-elicitor en Fase 0.5. Vacío si la HU pasó sin pausa de elicitación.",
+      "items": { "type": "string" }
+    },
+    "enriquecimiento": {
+      "type": "object",
+      "description": "Bloques opcionales producidos por enrichers en la Fase 2.5. Solo presentes cuando el orchestrator detectó señales de activación.",
+      "properties": {
+        "seguridad": {
+          "type": "object",
+          "description": "Output de hu-security-enricher. Presente cuando iso25010.seguridad aplicable+no cubierta o keywords de auth/seguridad detectados.",
+          "properties": {
+            "activado_por":              { "type": "string" },
+            "nivel_riesgo_seguridad":    { "type": "string", "enum": ["Alto", "Medio", "Bajo"] },
+            "stride":                    { "type": "object" },
+            "owasp_relevantes":          { "type": "array", "items": { "type": "string" } },
+            "recomendacion_arquitectura":{ "type": "string" },
+            "criterios_adicionales":     { "type": "array" },
+            "tareas_adicionales":        { "type": "array" },
+            "preguntas_adicionales":     { "type": "array" }
+          }
+        },
+        "integracion": {
+          "type": "object",
+          "description": "Output de hu-integration-enricher. Presente cuando hay ≥2 dependencias externas o keywords de integración.",
+          "properties": {
+            "activado_por":             { "type": "string" },
+            "complejidad_integracion":  { "type": "string", "enum": ["Alta", "Media", "Baja"] },
+            "contratos_api":            { "type": "array" },
+            "analisis_resiliencia":     { "type": "array" },
+            "criterios_adicionales":    { "type": "array" },
+            "tareas_adicionales":       { "type": "array" },
+            "preguntas_adicionales":    { "type": "array" }
+          }
+        },
+        "datos": {
+          "type": "object",
+          "description": "Output de hu-data-enricher. Presente cuando hay tareas DB pesadas o keywords de modelado de datos.",
+          "properties": {
+            "activado_por":             { "type": "string" },
+            "complejidad_datos":        { "type": "string", "enum": ["Alta", "Media", "Baja"] },
+            "estrategia_migracion":     { "type": "string" },
+            "modelo_propuesto":         { "type": "array" },
+            "analisis_consistencia":    { "type": "object" },
+            "criterios_adicionales":    { "type": "array" },
+            "tareas_adicionales":       { "type": "array" },
+            "preguntas_adicionales":    { "type": "array" }
+          }
+        },
+        "split": {
+          "type": "object",
+          "description": "Output de hu-split-advisor. Presente cuando la HU es candidata a división. El PM decide si ejecuta el split.",
+          "properties": {
+            "activado_por":             { "type": "string" },
+            "estrategia_division":      { "type": "string" },
+            "diagnostico":              { "type": "string" },
+            "hu_original_estado":       { "type": "string" },
+            "historias_derivadas":      { "type": "array" },
+            "orden_desarrollo":         { "type": "array", "items": { "type": "string" } },
+            "suma_story_points_derivadas": { "type": "integer" },
+            "diferencia_vs_original":   { "type": "string" },
+            "mensaje_pm":               { "type": "string" },
+            "riesgos_division":         { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
   },
   "quality_gates": {
     "G1": "criteriosAceptacion.length >= criteriosOriginales.length",
     "G2": "all tareas have non-empty dod",
     "G3": "all tareas have estimacion_o, estimacion_p, estimacion_pe",
-    "G4": "calificacion_iso is a number between 0 and 5"
+    "G4": "calificacion_iso is a number between 0 and 5",
+    "G5": "IDs de tareas nuevas de enrichers (T-SEC-XX, T-INT-XX, T-DAT-XX) no colisionan con IDs existentes",
+    "G6": "narrativa_completa sigue formato 'Como [rol], quiero [acción], para [beneficio]' — si no, relanzar",
+    "G7": "ratio story_points:estimacion_total_horas entre 3–8h/SP — si no, estimacion_incoherente=true (no bloquea, pero se marca)",
+    "G8": "dependencias no contiene ciclos directos (HU-A bloqueante de HU-B que a su vez bloquea HU-A) — marcar en notas_analista",
+    "G9": "confidence_score >= 0.40 — si es menor, requiere_aclaracion=true y estado_hu=ACLARACION_REQUERIDA"
   },
   "calificacion_formula": "calificacion_iso = round((iso29148_score_norm * 0.50 + invest_score_norm * 0.30 + iso25010_score_norm * 0.20) * 5, 1)",
   "calificacion_escala": {

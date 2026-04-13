@@ -336,6 +336,21 @@ main{flex:1;padding:var(--space-6);max-width:var(--max-w);margin:0 auto;width:10
 .gantt-wrap{overflow-x:auto;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-4)}
 .gantt-legend{display:flex;gap:var(--space-4);flex-wrap:wrap;margin-top:var(--space-3);font-size:.74rem;color:var(--color-text-muted)}
 .legend-dot{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:.35rem;vertical-align:middle}
+/* ── Capacity bars (Azure Boards style) ──────────────── */
+.cap-bar-row{display:flex;align-items:center;gap:var(--space-3);margin-bottom:.55rem;flex-wrap:wrap}
+.cap-bar-label{min-width:54px;font-size:.74rem;font-weight:700;color:var(--color-text-muted);text-align:right;flex-shrink:0}
+.cap-bar-track{flex:1;min-width:120px;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-full);height:18px;overflow:hidden;position:relative}
+.cap-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .5s ease;display:flex;align-items:center;padding:0 .4rem}
+.cap-bar-fill-ok{background:linear-gradient(90deg,#16A34A,#22C55E)}
+.cap-bar-fill-warn{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.cap-bar-fill-over{background:linear-gradient(90deg,#DC2626,#EF4444)}
+.cap-bar-pct{font-size:.62rem;font-weight:700;color:#fff;white-space:nowrap;line-height:1}
+.cap-bar-meta{font-size:.7rem;color:var(--color-text-muted);white-space:nowrap;min-width:140px}
+.cap-input-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3);margin-bottom:var(--space-3)}
+.cap-role-row{display:flex;align-items:center;gap:.5rem;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:.4rem .65rem}
+.cap-role-label{font-size:.74rem;font-weight:700;min-width:50px}
+.cap-role-input{width:50px;padding:3px 5px;border:1px solid var(--color-border);border-radius:4px;font-family:var(--font-mono);font-size:.78rem;text-align:center;background:var(--color-surface);color:var(--color-text)}
+.cap-role-input:focus{outline:2px solid var(--rr-orange);outline-offset:1px}
 .unit-toggle-wrap{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-2) 0 var(--space-3);flex-wrap:wrap}
 .unit-toggle-label{font-size:.8rem;color:var(--color-text-muted);font-weight:600}
 .unit-toggle{display:inline-flex;background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:999px;padding:3px;gap:2px}
@@ -491,11 +506,8 @@ main{flex:1;padding:var(--space-6);max-width:var(--max-w);margin:0 auto;width:10
     <div class="tab-dropdown" id="tab-reports-wrap">
       <button class="tab" id="tab-reports" aria-haspopup="true" aria-expanded="false">📥 Respaldo ▾</button>
       <div class="tab-menu" role="menu">
-        <button data-report="export-md">⬇ Exportar Feedback + EVM (Markdown)</button>
-        <button data-report="import-md">⬆ Importar Feedback + EVM (Markdown)</button>
-        <div class="menu-sep"></div>
-        <button data-report="export-json">⬇ Exportar Estado (JSON)</button>
-        <button data-report="pdf">📑 Imprimir / Exportar PDF</button>
+        <button data-report="export-md">⬇ Exportar respaldo (Markdown)</button>
+        <button data-report="import-md">⬆ Importar respaldo (Markdown)</button>
       </div>
     </div>
   </nav>
@@ -509,7 +521,7 @@ main{flex:1;padding:var(--space-6);max-width:var(--max-w);margin:0 auto;width:10
     Si cierras o recargas esta pestaña perderás el feedback HITL y las mediciones de avance.
   </div>
   <div class="bb-actions">
-    <button class="btn btn-primary btn-sm" id="bb-download">⬇ Descargar respaldo</button>
+    <button class="btn btn-primary btn-sm" id="bb-download" data-tip="Guarda el archivo en output/Historico/ del proyecto para mantener el historial.">⬇ Descargar respaldo</button>
     <button class="btn btn-ghost btn-sm" id="bb-dismiss">Ocultar</button>
   </div>
 </div>
@@ -824,7 +836,6 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     </div>
     <div class="hu-modal-body" id="hu-modal-body"><!-- populated by JS --></div>
     <div class="hu-modal-footer" id="hu-modal-footer">
-      <button class="btn btn-ghost" id="btn-save">💾 Guardar cambios</button>
       <button class="btn btn-reject" id="btn-reject">✗ Rechazar / Iterar</button>
       <button class="btn btn-approve" id="btn-approve">✓ Aprobar HU</button>
     </div>
@@ -867,7 +878,9 @@ indica "No documentado — requiere confirmación del equipo".</pre>
   const DIRTY_KEY = 'rr_dirty_'+ SPRINT_ID;
   const UNIT_KEY  = 'rr_evm_unit_' + SPRINT_ID;
   const DATES_KEY = 'rr_dates_' + SPRINT_ID;
-  const BAC_KEY   = 'rr_bac_'  + SPRINT_ID;
+  const BAC_KEY     = 'rr_bac_'     + SPRINT_ID; // legacy (horas)
+  const BAC_COP_KEY = 'rr_bac_cop_' + SPRINT_ID; // nuevo (COP)
+  const CAP_KEY     = 'rr_cap_'     + SPRINT_ID; // capacidad del equipo
   const STATE_VERSION = '1.2';
   const HOURLY_RATE = 80000;
   const USD_RATE    = 4100;
@@ -875,8 +888,22 @@ indica "No documentado — requiere confirmación del equipo".</pre>
   // ── Unit helpers ───────────────────────────────────────
   function loadUnit(){ return localStorage.getItem(UNIT_KEY)||'cop'; }
   function saveUnit(u){ localStorage.setItem(UNIT_KEY,u); }
+  // BAC stored in COP internally; backward-compat: old key stored hours
+  function loadCustomBacCOP(){
+    const v=localStorage.getItem(BAC_COP_KEY); if(v!=null) return +v;
+    const h=localStorage.getItem(BAC_KEY); if(h!=null) return +h*HOURLY_RATE;
+    return null;
+  }
+  function saveCustomBacCOP(cop){
+    if(cop!=null&&cop>0){localStorage.setItem(BAC_COP_KEY,String(cop));localStorage.removeItem(BAC_KEY);markDirty();}
+    else{localStorage.removeItem(BAC_COP_KEY);localStorage.removeItem(BAC_KEY);}
+  }
+  // legacy stubs (used in applyStatePayload backward compat)
   function loadCustomBacH(){ const v=localStorage.getItem(BAC_KEY); return v!=null?+v:null; }
   function saveCustomBacH(v){ if(v>0){localStorage.setItem(BAC_KEY,String(v));markDirty();}else{localStorage.removeItem(BAC_KEY);} }
+  // Capacity helpers
+  function loadCap(){ try{return JSON.parse(localStorage.getItem(CAP_KEY)||'{}');}catch(e){return{};} }
+  function saveCap(o){ localStorage.setItem(CAP_KEY,JSON.stringify(o||{})); markDirty(); }
   function toUnit(cop){
     const u=loadUnit();
     if(u==='hours') return (+cop||0)/HOURLY_RATE;
@@ -1041,8 +1068,7 @@ indica "No documentado — requiere confirmación del equipo".</pre>
       else lines.push('- Sin dependencias.');
       lines.push('');
     });
-    download(SPRINT_ID+'-historias-refinadas-'+new Date().toISOString().slice(0,10)+'.md',lines.join('\n'),'text/markdown');
-    flash('Historias refinadas descargadas ✓');
+    downloadWithPicker(SPRINT_ID+'-historias-refinadas-'+new Date().toISOString().slice(0,10)+'.md',lines.join('\n'),'text/markdown').then(s=>{ if(s) flash('Historias refinadas guardadas en Historico/ ✓'); });
   }
   function renderRisicarCards(riesgos,riskState,huId){
     if(!(riesgos||[]).length)return'<p style="color:var(--color-text-muted)">Sin riesgos registrados.</p>';
@@ -1385,6 +1411,27 @@ indica "No documentado — requiere confirmación del equipo".</pre>
         const p=parseFloat(row.querySelector('[data-pert=p]').value)||0;
         const pe=parseFloat(row.querySelector('[data-pert=pe]').value)||0;
         row.querySelector('[data-e-tid]').textContent=((o+4*p+pe)/6).toFixed(2)+' h';
+        // Recalculate footer total E for this HU
+        const tblEl=row.closest('table');
+        if(tblEl){
+          const footerE=tblEl.querySelector('tfoot .pert-e');
+          if(footerE){
+            const st2=huState(huId);
+            const totalEHU2=(h.tareas||[]).reduce((a,t2)=>{const up2=st2.pert[t2.tarea_id]||{};const o2=up2.o!=null?+up2.o:(t2.estimacion_o||0);const p2=up2.p!=null?+up2.p:(t2.estimacion_p||0);const pe2=up2.pe!=null?+up2.pe:(t2.estimacion_pe||0);return a+(o2+4*p2+pe2)/6;},0);
+            footerE.textContent=totalEHU2.toFixed(2)+' h';
+          }
+          // Recalculate O P Pe column totals too
+          const footerCells=tblEl.querySelectorAll('tfoot td');
+          if(footerCells.length>=7){
+            const st3=huState(huId);
+            const sumO=(h.tareas||[]).reduce((a,t2)=>{const up=st3.pert[t2.tarea_id]||{};return a+(up.o!=null?+up.o:(t2.estimacion_o||0));},0);
+            const sumP=(h.tareas||[]).reduce((a,t2)=>{const up=st3.pert[t2.tarea_id]||{};return a+(up.p!=null?+up.p:(t2.estimacion_p||0));},0);
+            const sumPe=(h.tareas||[]).reduce((a,t2)=>{const up=st3.pert[t2.tarea_id]||{};return a+(up.pe!=null?+up.pe:(t2.estimacion_pe||0));},0);
+            footerCells[4].textContent=sumO.toFixed(1);
+            footerCells[5].textContent=sumP.toFixed(1);
+            footerCells[6].textContent=sumPe.toFixed(1);
+          }
+        }
       });
     });
     body.querySelectorAll('textarea[data-answer]').forEach(t=>{
@@ -1419,7 +1466,6 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     });
 
     // Footer buttons
-    document.getElementById('btn-save').onclick=()=>flash('Cambios guardados');
     document.getElementById('btn-approve').onclick=()=>{
       updateHu(huId,{status:'aprobada'});
       flash('HU aprobada ✓');
@@ -1467,15 +1513,22 @@ indica "No documentado — requiere confirmación del equipo".</pre>
   function computeBaseline(){
     const cfg=sprintConfig();
     const historias=(D&&D.historias)||[];
-    const totalH=historias.reduce((a,h)=>a+(h.estimacion_total_horas||0),0);
+    const state=loadState();
     const hpd=cfg.horasDia||8;
+    let totalH=0;
     const baseline=historias.map(h=>{
-      const dist=h.distribucion_por_tipo||{};
+      const pertState=(state[h.hu_id]||{}).pert||{};
+      // Use PERT-adjusted distribution when available, fall back to static
+      const distPert=buildDistFromTareas(h.tareas,pertState);
+      const pertSum=Object.values(distPert).reduce((a,v)=>a+v,0);
+      const dist=pertSum>0?distPert:(h.distribucion_por_tipo||{});
+      const horas=pertSum>0?pertSum:(h.estimacion_total_horas||0);
+      totalH+=horas;
       const roleVals=Object.values(dist).filter(v=>+v>0);
-      const dias=roleVals.length?Math.max(1,Math.max(...roleVals.map(v=>Math.ceil(+v/hpd)))):Math.max(1,Math.ceil((h.estimacion_total_horas||0)/hpd));
+      const dias=roleVals.length?Math.max(1,Math.max(...roleVals.map(v=>Math.ceil(+v/hpd)))):Math.max(1,Math.ceil(horas/hpd));
       const diasPorRol={};
       Object.entries(dist).forEach(([rol,hrs])=>{if(+hrs>0)diasPorRol[rol]=Math.ceil(+hrs/hpd);});
-      return{hu_id:h.hu_id,titulo:h.titulo_mejorado||h.titulo_original||h.hu_id,horas:h.estimacion_total_horas||0,bac:(h.estimacion_total_horas||0)*HOURLY_RATE,pv:(h.estimacion_total_horas||0)*HOURLY_RATE,cal:h.calificacion_iso||0,deps:(h.dependencias||[]).map(d=>d.referencia).filter(Boolean),riesgos_alta:(h.riesgos||[]).filter(r=>(+r.nivel_riesgo_valor||0)>=10).length,dias:dias,dist:dist,diasPorRol:diasPorRol};
+      return{hu_id:h.hu_id,titulo:h.titulo_mejorado||h.titulo_original||h.hu_id,horas,bac:horas*HOURLY_RATE,pv:horas*HOURLY_RATE,cal:h.calificacion_iso||0,deps:(h.dependencias||[]).map(d=>d.referencia).filter(Boolean),riesgos_alta:(h.riesgos||[]).filter(r=>(+r.nivel_riesgo_valor||0)>=10).length,dias,dist,diasPorRol};
     });
     return{cfg,totalH,baseline,bac_total:totalH*HOURLY_RATE};
   }
@@ -1522,10 +1575,10 @@ indica "No documentado — requiere confirmación del equipo".</pre>
   function renderProgress(){
     if(!D||!D.historias){renderEmpty();return;}
     const{cfg,totalH,baseline,bac_total:bac_pert}=computeBaseline();
-    // Apply custom BAC (user-editable) over PERT-derived value
-    const customBacH=loadCustomBacH();
-    const effectiveTotalH=customBacH!=null?customBacH:totalH;
-    const bac_total=effectiveTotalH*HOURLY_RATE;
+    // Apply custom BAC (user-editable, stored in COP) over PERT-derived value
+    const customBacCOP=loadCustomBacCOP();
+    const bac_total=customBacCOP!=null?customBacCOP:(totalH*HOURLY_RATE);
+    const effectiveTotalH=bac_total/HOURLY_RATE; // for display in hints
 
     const evm=loadEvm();
     const state=loadState();
@@ -1557,6 +1610,46 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     const fechasOk=!!(startDate&&endDate);
     const fechaHint=fechasOk?('<strong>'+fmtDateLong(startDate)+'</strong> → <strong>'+fmtDateLong(endDate)+'</strong> · '+diasHabilesDecl+' días hábiles'):'<em style="color:var(--rr-orange)">Declara fecha de inicio y fin para fijar la línea base del Gantt</em>';
 
+    // ── Capacity calculation ────────────────────────────
+    const capData=loadCap();
+    const capRoles=capData.roles||[];
+    const capEventosH=+capData.horas_eventos||0;
+    // Build PERT hours per role from baseline
+    const pertByRol={};
+    baseline.forEach(b=>Object.entries(b.dist||{}).forEach(([rol,h2])=>pertByRol[rol]=(pertByRol[rol]||0)+(+h2||0)));
+    // EVM-aware mode: use last snapshot if available
+    const snapsForCap=evm.snapshots||[];
+    const lastSnapForCap=snapsForCap.length?snapsForCap[snapsForCap.length-1]:null;
+    const lastSnapDateObj=lastSnapForCap&&fechasOk?parseISODate(lastSnapForCap.fecha):null;
+    const useEvmMode=!!(lastSnapDateObj&&endDate&&lastSnapDateObj<endDate);
+    // pct complete from EVM (0 if no measurements)
+    const pctDone=bac_total>0?Math.min(1,totalEV/bac_total):0;
+    // Days used for capacity: remaining days from last snap (EVM mode) or full sprint (baseline mode)
+    const daysForCap=useEvmMode?Math.max(0,businessDaysBetween(lastSnapDateObj,endDate)):diasHabilesDecl;
+    const daysTotal=Math.max(1,diasHabilesDecl);
+    // Prorate event hours if in EVM mode (remaining fraction of sprint)
+    const eventFraction=useEvmMode?Math.min(1,daysForCap/daysTotal):1;
+    const capModeLabel=useEvmMode
+      ?'📊 Restante desde '+fmtDateShort(lastSnapDateObj)+' · '+daysForCap+' días'
+      :'📊 Proyección total del sprint';
+    // Compute capacity per declared role
+    const capResults=capRoles.map(cr=>{
+      const n=+cr.personas||0;
+      const horasBrutas=n*daysForCap*8;
+      const horasEventosTotal=n*capEventosH*eventFraction;
+      const horasNetas=Math.max(0,horasBrutas-horasEventosTotal);
+      // Remaining work per role: in EVM mode = PERT × (1 - pctDone); otherwise = full PERT
+      const pertTotal=pertByRol[cr.rol]||0;
+      const horasPert=useEvmMode?Math.max(0,pertTotal*(1-pctDone)):pertTotal;
+      const pct=horasNetas>0?Math.round(horasPert/horasNetas*100):0;
+      return{rol:cr.rol,n,horasBrutas,horasNetas,horasPert,pertTotal,pct,useEvmMode};
+    });
+    // All known roles
+    const allRoles=['DEV','QA','FE','DB','DEVOPS','UX'];
+    const declaredRols=capRoles.map(r=>r.rol);
+    // Known roles in PERT but not declared
+    const missingRols=Object.keys(pertByRol).filter(r=>!declaredRols.includes(r));
+
     // Sprint info
     const sprintInfoHtml=
       '<div class="card"><h2>📅 Datos del Sprint <span class="ux-tip" data-tip="Parámetros del sprint: fechas, capacidad y BAC.">?</span></h2>'+
@@ -1569,11 +1662,64 @@ indica "No documentado — requiere confirmación del equipo".</pre>
       '<p style="font-size:.8rem;color:var(--color-text-muted);margin-bottom:var(--space-3)">'+fechaHint+'</p>'+
       '<div class="summary-grid">'+
         '<div class="kpi"><div class="kpi-label">Sprint</div><div class="kpi-value">'+esc(SPRINT_ID)+'</div><div class="kpi-hint">'+esc((D.config&&D.config.proyecto_nombre)||'')+'</div></div>'+
-        '<div class="kpi"><div class="kpi-label">Duración</div><div class="kpi-value">'+diasHabilesDecl+'d</div><div class="kpi-hint">días hábiles</div></div>'+
-        '<div class="kpi"><div class="kpi-label">Equipo mín. requerido <span class="ux-tip" data-tip="Personas estimadas × 8h efectivas por persona por día.">?</span></div><div class="kpi-value">'+cfg.personas+' pers.</div><div class="kpi-hint">'+(cfg.personas*8)+' h/día · 8h/persona</div></div>'+
+        '<div class="kpi"><div class="kpi-label">Duración</div><div class="kpi-value">'+diasHabilesDecl+'d</div><div class="kpi-hint">días hábiles Colombia</div></div>'+
         '<div class="kpi"><div class="kpi-label">HUs aprobadas</div><div class="kpi-value">'+aprob+' / '+baseline.length+'</div><div class="kpi-hint">línea base HITL</div></div>'+
       '</div>'+
-      (()=>{const hs=(D&&D.historias)||[];const sd=sprintDistFromHistorias(hs);const st=hs.reduce((a,h)=>a+(h.estimacion_total_horas||0),0);return'<div style="padding-top:var(--space-3);border-top:1px solid var(--color-border)">'+renderEstBar(sd,st)+'</div>';})()+'</div>';
+      // ── Team Capacity (Azure Boards style) ──
+      '<div style="border-top:1px solid var(--color-border);padding-top:var(--space-4);margin-top:var(--space-3)">'+
+        '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:var(--space-3)">'+
+          '<h3 style="font-size:.9rem;font-weight:700;color:var(--color-text);margin:0">👥 Capacidad del Equipo</h3>'+
+          '<span class="ux-tip" data-tip="Declara las personas disponibles por rol. La barra compara las horas PERT estimadas vs. horas netas disponibles (días hábiles Colombia × 8h − horas de eventos por persona).">?</span>'+
+        '</div>'+
+        '<div style="display:flex;gap:var(--space-4);flex-wrap:wrap;align-items:flex-end;margin-bottom:var(--space-3)">'+
+          '<div>'+
+            '<label style="font-size:.7rem;font-weight:700;color:var(--rr-orange);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:.25rem">Horas de eventos/persona <span class="ux-tip" data-tip="Horas por persona dedicadas a ceremonias ágiles u otras actividades no operativas del sprint (ej: planeación 4h + retrospectiva 2h + demos 2h = 8h).">?</span></label>'+
+            '<input type="number" id="cap-eventos" min="0" step="1" value="'+capEventosH+'" class="cap-role-input" style="width:80px" placeholder="0">'+
+          '</div>'+
+          '<div style="flex:1;min-width:200px">'+
+            '<label style="font-size:.7rem;font-weight:700;color:var(--rr-orange);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:.25rem">Personas por rol</label>'+
+            '<div style="display:flex;gap:.4rem;flex-wrap:wrap">'+
+            allRoles.map(rol=>{const existing=capRoles.find(r=>r.rol===rol);const n=existing?existing.personas:0;return'<div class="cap-role-row"><span class="cap-role-label est-pill est-pill-'+rol+'">'+rol+'</span><input type="number" min="0" step="1" value="'+n+'" class="cap-role-input cap-n-input" data-rol="'+rol+'" style="width:42px" aria-label="Personas '+rol+'"></div>';}).join('')+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+        // Capacity bars
+        (!fechasOk
+          ?'<p style="font-size:.78rem;color:var(--rr-orange)">⚠ Declara las fechas del sprint para calcular días hábiles disponibles.</p>'
+          :(capRoles.filter(r=>+r.personas>0).length===0
+            ?'<p style="font-size:.78rem;color:var(--color-text-muted)">Ingresa el número de personas por rol para ver la barra de capacidad.</p>'
+            :'<div id="cap-bars">'+
+              '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.55rem">'+
+                '<span style="font-size:.72rem;font-weight:700;color:var(--rr-orange)">'+capModeLabel+'</span>'+
+                (useEvmMode?'<span class="ux-tip" data-tip="Modo EVM activo: días restantes desde el último snapshot ('+fmtDateLong(lastSnapDateObj)+') hasta el fin del sprint. Horas de trabajo = PERT × (1 − % completado EVM).">?</span>':'<span class="ux-tip" data-tip="Proyección sobre el sprint completo. Registra una medición EVM para activar el modo de proyección restante.">?</span>')+
+              '</div>'+
+              capResults.filter(cr=>cr.n>0).map(cr=>{
+                const fillCls=cr.pct<=80?'cap-bar-fill-ok':cr.pct<=100?'cap-bar-fill-warn':'cap-bar-fill-over';
+                const w=Math.min(100,cr.pct);
+                const workLabel=useEvmMode?cr.horasPert.toFixed(1)+'h restantes':cr.horasPert.toFixed(1)+'h PERT';
+                return'<div class="cap-bar-row">'+
+                  '<span class="cap-bar-label est-pill est-pill-'+cr.rol+'" style="min-width:54px">'+cr.rol+'</span>'+
+                  '<div class="cap-bar-track" data-tip="'+cr.rol+': '+workLabel+' de trabajo vs '+cr.horasNetas.toFixed(0)+'h disponibles ('+cr.n+' pers. × '+daysForCap+' días)">'+
+                    '<div class="cap-bar-fill '+fillCls+'" style="width:'+w+'%">'+
+                      (w>12?'<span class="cap-bar-pct">'+cr.pct+'%</span>':'')+
+                    '</div>'+
+                  '</div>'+
+                  '<span class="cap-bar-meta">'+workLabel+' / '+cr.horasNetas.toFixed(0)+'h disp. ('+cr.n+' pers.)'+(cr.pct>100?' ⚠ sobrecarga':'')+'</span>'+
+                '</div>';
+              }).join('')+
+              (missingRols.length?'<p style="font-size:.74rem;color:var(--rag-amber);margin-top:.4rem">⚠ Roles en PERT sin personas declaradas: '+missingRols.join(', ')+'</p>':'')+
+            '</div>'
+          )
+        )+
+      '</div>'+
+      (()=>{
+        // Use PERT-adjusted distribution (same as computeBaseline)
+        const stateLocal=loadState();
+        const hsLocal=(D&&D.historias)||[];
+        const sdLocal={};let stLocal=0;
+        hsLocal.forEach(h=>{const ps=(stateLocal[h.hu_id]||{}).pert||{};const d=buildDistFromTareas(h.tareas,ps);const hs2=Object.values(d).reduce((a,v)=>a+v,0);if(hs2>0){Object.entries(d).forEach(([k,v])=>sdLocal[k]=(sdLocal[k]||0)+v);stLocal+=hs2;}else{Object.entries(h.distribucion_por_tipo||{}).forEach(([k,v])=>sdLocal[k]=(sdLocal[k]||0)+(+v||0));stLocal+=(h.estimacion_total_horas||0);}});
+        return'<div style="padding-top:var(--space-3);border-top:1px solid var(--color-border)">'+renderEstBar(sdLocal,stLocal)+'</div>';
+      })()+'</div>';
 
     // Unit toggle
     const curUnit=loadUnit();
@@ -1587,10 +1733,10 @@ indica "No documentado — requiere confirmación del equipo".</pre>
       '<div class="card"><h2>💰 KPIs de Valor Ganado (EVM) <span class="ux-tip" data-tip="PMI-PMBOK 7. BAC=presupuesto. PV=planificado. EV=ganado. AC=costo real.">?</span></h2>'+
       unitHtml+
       '<div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.65rem var(--space-4);background:var(--rr-orange-light);border:1px solid var(--rr-orange-border);border-radius:var(--radius-md);margin-bottom:var(--space-3)">'+
-        '<span style="font-size:.74rem;font-weight:700;color:var(--rr-orange)">✏ BAC editable (horas):</span>'+
-        '<input type="number" id="bac-custom-input" aria-label="BAC editable en horas" value="'+effectiveTotalH.toFixed(1)+'" step="1" min="1" style="width:90px;padding:.3rem .5rem;border:1px solid var(--rr-orange-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-text);font-family:var(--font-mono);font-size:.82rem;font-weight:700">'+
-        '<button id="btn-bac-reset" class="btn btn-ghost btn-sm" style="font-size:.72rem">↩ Restablecer PERT ('+totalH.toFixed(0)+'h)</button>'+
-        '<span style="font-size:.72rem;color:var(--color-text-muted)">PERT derivado: <strong>'+totalH.toFixed(1)+' h</strong></span>'+
+        '<span style="font-size:.74rem;font-weight:700;color:var(--rr-orange)">✏ BAC editable ('+unitSuffix()+'): <span class="ux-tip" data-tip="Ingresa el BAC en la unidad activa: '+unitSuffix()+'. Se convierte automáticamente. Usa el toggle de unidad para cambiar entre Horas, COP y USD.">?</span></span>'+
+        '<input type="number" id="bac-custom-input" aria-label="BAC editable en '+unitSuffix()+'" value="'+toUnit(bac_total).toFixed(curUnit==="hours"?1:0)+'" step="'+(curUnit==="hours"?1:(curUnit==="usd"?100:100000))+'" min="0" style="width:110px;padding:.3rem .5rem;border:1px solid var(--rr-orange-border);border-radius:var(--radius-sm);background:var(--color-surface);color:var(--color-text);font-family:var(--font-mono);font-size:.82rem;font-weight:700">'+
+        '<button id="btn-bac-reset" class="btn btn-ghost btn-sm" style="font-size:.72rem">↩ PERT ('+fmtEvm(totalH*HOURLY_RATE)+')</button>'+
+        '<span style="font-size:.72rem;color:var(--color-text-muted)">PERT derivado: <strong>'+fmtEvm(totalH*HOURLY_RATE)+'</strong></span>'+
       '</div>'+
       '<div class="summary-grid">'+
         '<div class="kpi"><div class="kpi-label">BAC <span class="ux-tip" data-tip="Budget At Completion: presupuesto total del sprint. Editable arriba.">?</span></div><div class="kpi-value" id="bac-kpi-value">'+fmtEvm(bac_total)+'</div><div class="kpi-hint">'+esc(bacHint)+'</div></div>'+
@@ -1684,15 +1830,17 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     let snapsHistHtml='<div class="card"><h2>🗂️ Historial de mediciones ('+snaps.length+')</h2>';
     if(!snaps.length){snapsHistHtml+='<p style="color:var(--color-text-muted)">Sin mediciones aún.</p>';}
     else{
-      snapsHistHtml+='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Fecha</th><th>PV</th><th>EV</th><th>AC</th><th>CPI</th><th>SPI</th><th>Notas</th><th></th></tr></thead><tbody>';
+      snapsHistHtml+='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>#</th><th>Fecha</th><th>PV</th><th>EV</th><th>AC</th><th>CPI</th><th>SPI</th><th>EAC <span class="ux-tip" data-tip="Estimate At Completion = BAC ÷ CPI">?</span></th><th>Notas</th><th></th></tr></thead><tbody>';
       snaps.forEach((s,i)=>{
         const pv_=+s.pv||0,ev_=+s.ev||0,ac_=+s.ac||0;
         const cpi_=ac_>0?(ev_/ac_):0,spi_=pv_>0?(ev_/pv_):0;
+        const eac_=cpi_>0?bac_total/cpi_:bac_total;
         snapsHistHtml+='<tr><td>'+(i+1)+'</td><td>'+esc(s.fecha||'')+'</td><td>'+fmtEvm(pv_)+'</td><td>'+fmtEvm(ev_)+'</td><td>'+fmtEvm(ac_)+'</td>'+
           '<td style="color:'+(cpi_>=0.95?'#16A34A':cpi_>=0.85?'#D97706':'#DC2626')+'">'+fmtNum(cpi_)+'</td>'+
           '<td style="color:'+(spi_>=0.95?'#16A34A':spi_>=0.85?'#D97706':'#DC2626')+'">'+fmtNum(spi_)+'</td>'+
-          '<td style="color:var(--color-text-muted);font-size:.76rem">'+esc(s.notas||'')+'</td>'+
-          '<td><button class="btn btn-ghost btn-sm" data-snap-del="'+i+'">✕</button></td></tr>';
+          '<td style="color:var(--color-text-muted)">'+fmtEvm(eac_)+'</td>'+
+          '<td style="color:var(--color-text-muted);font-size:.76rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(s.notas||'')+'">'+esc(s.notas||'—')+'</td>'+
+          '<td><button class="btn btn-sm" data-snap-del="'+i+'" style="background:var(--rag-red-bg);border:1px solid var(--rag-red-border);color:var(--rag-red);padding:3px 8px" title="Eliminar esta medición">✕</button></td></tr>';
       });
       snapsHistHtml+='</tbody></table></div>';
     }
@@ -1769,18 +1917,27 @@ indica "No documentado — requiere confirmación del equipo".</pre>
       saveEvm(e); flash('Medición registrada'); renderProgress();
     });
     document.querySelectorAll('[data-snap-del]').forEach(btn=>{
-      btn.addEventListener('click',()=>{ const e=loadEvm(); e.snapshots.splice(+btn.dataset.snapDel,1); saveEvm(e); renderProgress(); });
+      btn.addEventListener('click',()=>{
+        const idx=+btn.dataset.snapDel;
+        const e=loadEvm();
+        const s=e.snapshots[idx];
+        const label=s?(s.fecha||'#'+(idx+1)):'#'+(idx+1);
+        if(!confirm('¿Eliminar la medición del '+label+'?\n\nEsta acción no se puede deshacer.')) return;
+        e.snapshots.splice(idx,1);
+        saveEvm(e);
+        renderProgress();
+      });
     });
     // PMO quick button
     const pmoBtn=document.getElementById('btn-pmo-quick');
     if(pmoBtn) pmoBtn.addEventListener('click',()=>{ printPmoReport(); flash('Abriendo Bitácora PMO…'); });
     const pmoMdBtn=document.getElementById('btn-pmo-md');
-    if(pmoMdBtn) pmoMdBtn.addEventListener('click',()=>{ const date=new Date().toISOString().slice(0,10); download(SPRINT_ID+'-bitacora-pmo-'+date+'.md',buildPmoMd(),'text/markdown'); flash('Bitácora PMO (.md) descargada'); });
-    // BAC editable
+    if(pmoMdBtn) pmoMdBtn.addEventListener('click',()=>{ const date=new Date().toISOString().slice(0,10); downloadWithPicker(SPRINT_ID+'-bitacora-pmo-'+date+'.md',buildPmoMd(),'text/markdown').then(s=>{ if(s) flash('Bitácora PMO guardada en Historico/ ✓'); }); });
+    // BAC editable (stores in COP regardless of display unit)
     const bacInp=document.getElementById('bac-custom-input');
     const bacResetBtn=document.getElementById('btn-bac-reset');
-    if(bacInp) bacInp.addEventListener('change',()=>{ const v=parseFloat(bacInp.value)||0; saveCustomBacH(v>0?v:null); renderProgress(); });
-    if(bacResetBtn) bacResetBtn.addEventListener('click',()=>{ saveCustomBacH(null); renderProgress(); });
+    if(bacInp) bacInp.addEventListener('change',()=>{ const v=parseFloat(bacInp.value)||0; const cop=fromUnit(v); saveCustomBacCOP(cop>0?cop:null); renderProgress(); });
+    if(bacResetBtn) bacResetBtn.addEventListener('click',()=>{ saveCustomBacCOP(null); renderProgress(); });
     // Date inputs
     const inpStart=document.getElementById('sprint-date-start');
     const inpEnd=document.getElementById('sprint-date-end');
@@ -1790,6 +1947,21 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     if(inpEnd) inpEnd.addEventListener('change',()=>{ const d=loadDates();d.end=inpEnd.value||null;saveDates(d);renderProgress(); });
     if(btnAuto) btnAuto.addEventListener('click',()=>{ const d=loadDates();const s=parseISODate(d.start);if(!s){flash('Primero declara la fecha de inicio');return;}d.end=toISODate(addBusinessDays(s,cfg.dias));saveDates(d);renderProgress(); });
     if(btnClr) btnClr.addEventListener('click',()=>{ if(!confirm('¿Borrar las fechas?'))return;saveDates({});renderProgress(); });
+    // ── Capacity inputs ─────────────────────────────────
+    function persistCap(){
+      const cap2=loadCap();
+      const eventosInp=document.getElementById('cap-eventos');
+      if(eventosInp) cap2.horas_eventos=parseFloat(eventosInp.value)||0;
+      const roleInputs=document.querySelectorAll('.cap-n-input');
+      const roles2=[];
+      roleInputs.forEach(ri=>{const n=+ri.value||0;if(n>0)roles2.push({rol:ri.dataset.rol,personas:n});});
+      cap2.roles=roles2;
+      saveCap(cap2);
+      renderProgress();
+    }
+    const capEventosInp=document.getElementById('cap-eventos');
+    if(capEventosInp){ capEventosInp.addEventListener('input',persistCap); capEventosInp.addEventListener('change',persistCap); }
+    document.querySelectorAll('.cap-n-input').forEach(ri=>{ ri.addEventListener('input',persistCap); ri.addEventListener('change',persistCap); });
     // Render chart immediately (EVM is default active sub-panel)
     const cfgWithDates=Object.assign({},cfg,{dias:diasHabilesDecl,startDate,endDate,fechasDeclaradas:fechasOk});
     renderEvmChart(snaps,bac_total,cfgWithDates,dates);
@@ -1964,25 +2136,43 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     }
     // snapMap already deduped above — reuse for tooltips
     const snapByDate=snapMap;
+    // Pre-compute EAC per snap for tooltip
+    const eacByDate={};
+    Object.entries(snapByDate).forEach(([d,s])=>{
+      const ev_=+s.ev||0,ac_=+s.ac||0;
+      const cpi_=ac_>0?ev_/ac_:0;
+      eacByDate[d]=cpi_>0?bac/cpi_:bac;
+    });
     window._rrChart=new Chart(ctx,{
       type:'line',
       data:{labels,datasets:[
-        {label:'PV — Línea Base',data:pvLine,borderColor:'#6B6560',borderDash:[6,4],fill:false,tension:0,pointRadius:0,borderWidth:1.5,order:3},
-        {label:'EV — Valor Ganado',data:evData,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.15)',fill:true,tension:.3,spanGaps:false,pointRadius:6,pointHoverRadius:9,pointBackgroundColor:'#22C55E',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3,order:1},
-        {label:'AC — Costo Real',data:acData,borderColor:'#F97316',backgroundColor:'rgba(249,115,22,.10)',fill:true,tension:.3,spanGaps:false,pointRadius:6,pointHoverRadius:9,pointBackgroundColor:'#F97316',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3,order:2},
-        {label:'Tendencia EV',data:trendData,borderColor:'rgba(34,197,94,.45)',borderDash:[3,5],fill:false,tension:0,pointRadius:0,borderWidth:2,order:4}
+        {label:'PV — Línea Base',data:pvLine,borderColor:'#6B6560',borderDash:[6,4],fill:false,tension:0,pointRadius:4,pointHoverRadius:7,pointBackgroundColor:'#6B6560',pointBorderColor:'#fff',pointBorderWidth:1,borderWidth:1.5,order:3,spanGaps:true},
+        {label:'EV — Valor Ganado',data:evData,borderColor:'#22C55E',backgroundColor:'rgba(34,197,94,.15)',fill:true,tension:.3,spanGaps:true,pointRadius:6,pointHoverRadius:9,pointBackgroundColor:'#22C55E',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3,order:1},
+        {label:'AC — Costo Real',data:acData,borderColor:'#F97316',backgroundColor:'rgba(249,115,22,.10)',fill:true,tension:.3,spanGaps:true,pointRadius:6,pointHoverRadius:9,pointBackgroundColor:'#F97316',pointBorderColor:'#fff',pointBorderWidth:2,borderWidth:3,order:2},
+        {label:'Tendencia EV',data:trendData,borderColor:'rgba(34,197,94,.45)',borderDash:[3,5],fill:false,tension:0,pointRadius:0,borderWidth:2,order:4,spanGaps:true}
       ]},
       options:{responsive:true,maintainAspectRatio:false,
         interaction:{mode:'index',intersect:false},
         plugins:{legend:{position:'bottom',labels:{color:'#8A8785',font:{family:'Inter',size:12},filter:i=>i.text!=='Tendencia EV'||trendData.some(v=>v!=null)}},
           tooltip:{callbacks:{
-            title:function(items){const lbl=items[0]&&items[0].label||'';const s=snapByDate[lbl];return lbl+(s&&s.notas?' — '+s.notas:'');},
+            title:function(items){
+              const lbl=items[0]&&items[0].label||'';
+              const s=snapByDate[lbl];
+              return lbl+(s&&s.notas?' — '+s.notas:'');
+            },
+            afterTitle:function(items){
+              const lbl=items[0]&&items[0].label||'';
+              const s=snapByDate[lbl];
+              if(!s) return null;
+              const ev_=+s.ev||0,ac_=+s.ac||0,pv_=+s.pv||0;
+              const cpi_=ac_>0?(ev_/ac_).toFixed(2):'—';
+              const spi_=pv_>0?(ev_/pv_).toFixed(2):'—';
+              const eac_=eacByDate[lbl]!=null?fmtEvm(eacByDate[lbl]):'—';
+              return['─────────────────','PV: '+fmtEvm(pv_)+'  EV: '+fmtEvm(ev_)+'  AC: '+fmtEvm(ac_),'CPI: '+cpi_+'  SPI: '+spi_+'  EAC: '+eac_,'─────────────────'];
+            },
             label:function(ctx){
-              if(ctx.parsed.y==null)return null;
-              const s=snapByDate[ctx.label]||{};
-              const base=ctx.dataset.label+': '+fmtEvm(ctx.parsed.y);
-              if(ctx.datasetIndex===1&&s.pv!=null){const cpi=+s.ac>0?(+s.ev/+s.ac).toFixed(2):'—';const spi=+s.pv>0?(+s.ev/+s.pv).toFixed(2):'—';return base+' | CPI '+cpi+' · SPI '+spi;}
-              return base;
+              if(ctx.parsed.y==null) return null;
+              return ctx.dataset.label+': '+fmtEvm(ctx.parsed.y);
             }
           }}
         },
@@ -2342,7 +2532,7 @@ indica "No documentado — requiere confirmación del equipo".</pre>
 
   // ── Markdown export/import ─────────────────────────────
   function buildStatePayload(){
-    return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm()};
+    return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm(),unit:loadUnit(),dates:loadDates(),bac_custom_cop:loadCustomBacCOP(),cap:loadCap()};
   }
   function parseStatePayload(mdText){
     const re=/<!--\s*RR-STATE-BEGIN\s*-->[\s\S]*?```json\s*([\s\S]*?)\s*```[\s\S]*?<!--\s*RR-STATE-END\s*-->/;
@@ -2355,6 +2545,11 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     if(payload.sprint_id&&payload.sprint_id!==SPRINT_ID){if(!confirm('El archivo pertenece a '+payload.sprint_id+' pero estás en '+SPRINT_ID+'. ¿Importar?'))return{ok:false};}
     if(payload.hitl)localStorage.setItem(LS_KEY,JSON.stringify(payload.hitl));
     if(payload.evm)localStorage.setItem(EVM_KEY,JSON.stringify(payload.evm));
+    if(payload.unit)localStorage.setItem(UNIT_KEY,payload.unit);
+    if(payload.dates)localStorage.setItem(DATES_KEY,JSON.stringify(payload.dates));
+    if(payload.bac_custom_cop!=null)localStorage.setItem(BAC_COP_KEY,String(payload.bac_custom_cop));
+    else if(payload.bac_custom_h!=null)localStorage.setItem(BAC_KEY,String(payload.bac_custom_h)); // backward compat
+    if(payload.cap)localStorage.setItem(CAP_KEY,JSON.stringify(payload.cap));
     return{ok:true};
   }
   function handleImportFile(file,rerender){
@@ -2417,7 +2612,37 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     lines.push('<!-- RR-STATE-END -->');
     return lines.join('\n');
   }
+  // ── File System Access API helpers ────────────────────
+  async function downloadWithPicker(filename,content,type){
+    const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});
+    if(window.showSaveFilePicker){
+      try{
+        const ext=filename.split('.').pop()||'md';
+        const mimeMap={md:'text/markdown',json:'application/json',html:'text/html'};
+        const handle=await window.showSaveFilePicker({
+          suggestedName:filename,
+          startIn:'documents',
+          types:[{description:'Archivo Historico RR',accept:{[mimeMap[ext]||'text/plain']:['.'+(ext)]}}]
+        });
+        const writable=await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        flash('Guardado en: '+handle.name+' ✓');
+        return true;
+      } catch(err){
+        if(err.name==='AbortError') return false; // user cancelled
+        // Fall through to legacy download
+      }
+    }
+    // Legacy fallback
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},0);
+    return true;
+  }
   function download(filename,content,type){
+    // Keep sync version for cases that don't need picker (internal calls)
     const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
@@ -2425,9 +2650,32 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},0);
   }
   function downloadBackup(){
-    download(SPRINT_ID+'-respaldo-'+(new Date().toISOString().slice(0,10))+'.md',buildMarkdown(),'text/markdown');
-    flash('Respaldo descargado');
-    markClean();
+    const filename=SPRINT_ID+'-respaldo-'+(new Date().toISOString().slice(0,10))+'.md';
+    const content=buildMarkdown();
+    downloadWithPicker(filename,content,'text/markdown').then(saved=>{
+      if(saved){flash('Respaldo guardado en Historico/ ✓');markClean();}
+    });
+  }
+  async function importWithPicker(callback){
+    if(window.showOpenFilePicker){
+      try{
+        const[handle]=await window.showOpenFilePicker({
+          startIn:'documents',
+          types:[{description:'Respaldo Markdown RR',accept:{'text/markdown':['.md','.markdown'],'text/plain':['.txt']}}],
+          multiple:false
+        });
+        const file=await handle.getFile();
+        callback(file);
+        return;
+      } catch(err){
+        if(err.name==='AbortError') return;
+      }
+    }
+    // Legacy fallback
+    const inp=document.createElement('input');
+    inp.type='file';inp.accept='.md,.markdown,text/plain';
+    inp.onchange=e=>{const f=e.target.files[0];if(f)callback(f);};
+    inp.click();
   }
 
   // ── Toast ──────────────────────────────────────────────
@@ -2457,7 +2705,7 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     b.addEventListener('click',()=>{
       const r=b.dataset.report;
       if(r==='export-md') downloadBackup();
-      else if(r==='import-md'){const inp=document.createElement('input');inp.type='file';inp.accept='.md,.markdown,text/plain';inp.onchange=e=>{const f=e.target.files[0];if(f)handleImportFile(f,()=>{renderDashboard();showView('dashboard');});};inp.click();}
+      else if(r==='import-md') importWithPicker(f=>handleImportFile(f,()=>{renderDashboard();showView('dashboard');}));
       else if(r==='export-json'){download(SPRINT_ID+'-state.json',JSON.stringify(buildStatePayload(),null,2),'application/json');flash('JSON exportado');}
       else if(r==='pdf') window.print();
     });

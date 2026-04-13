@@ -14,7 +14,7 @@ Un sistema de agentes analiza las HUs del sprint, genera CAs en Gherkin, tareas 
 1. **Contexto se lee UNA VEZ** -- El orquestador lee todos los archivos y pasa el contenido como texto a los agentes. Los agentes nunca leen archivos.
 2. **1 agente por HU** -- `hu-full-analyzer` ejecuta los 5 analisis (INVEST, ISO 29148, ISO 25010, Gherkin, Tareas, Riesgos, Dependencias) en una sola invocacion. No 5 agentes separados.
 3. **Agentes producen DATA, no presentacion** -- Los agentes devuelven JSON puro conforme a `hu-calidad.schema.json`. Nunca HTML ni CSS.
-4. **1 template HTML fijo** -- `templates/sprint-dashboard.html` es un archivo HTML estatico con CSS y JS incluidos. Renderiza todo desde `window.__SPRINT_DATA__`.
+4. **1 template HTML fijo** -- `templates/core/sprint-dashboard.html` es un archivo HTML estatico con CSS y JS incluidos. Renderiza todo desde `window.__SPRINT_DATA__`.
 5. **Sin artefactos intermedios** -- No hay `parciales/*.json`, no hay `<hu-id>.html` individuales, no hay `style.css` ni `script.js` separados. Solo `data.json` + `index.html`.
 6. **Eficiencia de invocaciones** -- 1 invocacion por HU + 0-1 reintentos por quality gates.
 
@@ -93,8 +93,8 @@ Re-analiza SOLO las HUs rechazadas o con feedback (lee el `.md` exportado desde 
   docs/HUs/Sprint-X/*.md
   docs/contexto/contexto-funcional.md
   docs/contexto/contexto-tecnico.md
-  templates/hu-calidad.schema.json
-  templates/sprint-dashboard.html
+  templates/core/hu-calidad.schema.json
+  templates/core/sprint-dashboard.html
   Construir contexto_condensado
 
 [FASE 1 -- ANALISIS EN PARALELO (1 agente por HU)]
@@ -110,16 +110,29 @@ Re-analiza SOLO las HUs rechazadas o con feedback (lee el `.md` exportado desde 
   G3: todas las tareas tienen PERT triple (O, P, Pe)
   G4: calificacion_iso es numero 0-5
 
+[FASE 2.5 -- ENRIQUECIMIENTO SELECTIVO (segunda pasada, solo cuando aplica)]
+  Para cada HU, evaluar señales de activación:
+  └── seguridad  -> @hu-security-enricher  (si iso25010.seguridad aplicable+no cubierta, O keywords auth)
+  └── integracion -> @hu-integration-enricher  (si ≥2 deps externas, O keywords API/webhook)
+  └── datos      -> @hu-data-enricher  (si tarea DB con PERT > 6h, O keywords migración/esquema)
+  └── split      -> @hu-split-advisor  (si story_points ≥ 13, calidad insuficiente, O split recomendado)
+
+  Enrichers corren en paralelo entre sí (por HU).
+  El orquestador hace merge: append a criteriosAceptacion[], tareas[], preguntas_clarificacion[].
+  Bloques de enriquecimiento quedan en enriquecimiento.<tipo> del JSON.
+  G5: IDs de tareas nuevas no colisionan con los existentes.
+
 [FASE 3 -- CONSOLIDACION (orquestador construye)]
-  Reunir JSONs -> calcular metricas_sprint -> escribir data.json
+  Reunir JSONs (con enriquecimientos integrados) -> calcular metricas_sprint -> escribir data.json
 
 [FASE 4 -- GENERACION HTML (inyeccion en template)]
-  Leer templates/sprint-dashboard.html
+  Leer templates/core/sprint-dashboard.html
   Reemplazar /*__SPRINT_DATA__*/ con JSON de data.json
   Escribir output/Sprint-X/index.html
 
 [FASE 5 -- REPORTE AL PM]
   Resumen: HUs, calificacion promedio, horas, riesgos, preguntas
+  + indicar cuántas HUs fueron enriquecidas y por qué tipo de señal
 ```
 
 ---
@@ -128,13 +141,22 @@ Re-analiza SOLO las HUs rechazadas o con feedback (lee el `.md` exportado desde 
 
 | Agente | Rol | Normativa |
 |--------|-----|-----------|
-| `orchestrator` | Coordinador -- lee contexto, lanza agentes, consolida, inyecta en template | -- |
-| `hu-full-analyzer` | Analisis completo de 1 HU: INVEST + ISO 29148 + ISO 25010 + Gherkin + Tareas + Riesgos + Dependencias | ISO 29148 + ISO 25010 + INVEST |
+| `orchestrator` | Coordinador -- lee contexto, lanza agentes en paralelo, evalúa señales de enriquecimiento, consolida, inyecta en template | -- |
+| `hu-full-analyzer` | Análisis completo de 1 HU (primera pasada): INVEST + ISO 29148 + ISO 25010 + Gherkin + Tareas PERT + Riesgos + Dependencias | ISO 29148 + ISO 25010 + INVEST |
 | `report-builder` | Inyecta data.json en template HTML. NO genera CSS ni JS. | -- |
 | `client-report-generator` | Informe ejecutivo al cliente | ISO 25030 |
 | `spec-writer` | Specs SDD con Mermaid + HITL | ISO 29148 |
 
-Agentes legacy preservados pero no usados en el flujo principal:
+**Enrichment Agents (segunda pasada selectiva)** -- invocados por el orchestrator solo cuando detecta señales específicas en el output de hu-full-analyzer:
+
+| Agente | Señal de activación | Enriquecimiento |
+|--------|--------------------|-----------------| 
+| `hu-security-enricher` | iso25010.seguridad aplicable+no cubierta, O keywords auth/permisos | STRIDE, OWASP, CAs y tareas de seguridad |
+| `hu-integration-enricher` | ≥2 deps externas, O keywords API/webhook | Contratos de API, resiliencia, CAs de fallos |
+| `hu-data-enricher` | tarea DB con PERT > 6h, O keywords migración/esquema | Modelo de datos, consistencia, CAs de integridad |
+| `hu-split-advisor` | story_points ≥ 13, calidad insuficiente, O split recomendado | 2-3 HUs derivadas listas para backlog |
+
+Agentes legacy preservados en `_legacy/` como referencia -- su lógica fue absorbida por hu-full-analyzer:
 `hu-analyzer`, `gherkin-writer`, `task-estimator`, `risk-analyst`, `dependency-mapper`
 
 ---
@@ -142,42 +164,65 @@ Agentes legacy preservados pero no usados en el flujo principal:
 ## Estructura de archivos
 
 ```
-Requirement Refinator V1/
-├── CLAUDE.md                          <- Este archivo (workflow master)
+Requirement Refinator V3/
+├── CLAUDE.md                              <- Este archivo (workflow master)
+├── README.md
+├── .gitignore
 ├── .claude/
 │   ├── agents/
-│   │   ├── orchestrator.md            <- Coordinacion (lee, lanza, consolida)
-│   │   ├── hu-full-analyzer.md        <- Analisis completo 1 HU -> JSON
-│   │   ├── report-builder.md          <- Inyecta data en template HTML
-│   │   ├── client-report-generator.md <- Informe al cliente
-│   │   ├── spec-writer.md             <- Specs SDD
-│   │   └── [legacy agents]            <- hu-analyzer, gherkin-writer, etc.
-│   └── skills/
-│       ├── refinar-hu/SKILL.md        <- /refinar-hu
-│       ├── refinar-sprint/SKILL.md    <- /refinar-sprint
-│       ├── iterar-refinamiento/SKILL.md
-│       ├── generar-informe/SKILL.md
-│       └── generar-specs/SKILL.md
+│   │   ├── _project/                      <- Agentes PROPIOS del Requirement Refinator
+│   │   │   ├── orchestrator.md            <- Coordinacion (lee, lanza, consolida, enriquece)
+│   │   │   ├── hu-full-analyzer.md        <- Análisis completo 1 HU -> JSON (primera pasada)
+│   │   │   ├── hu-security-enricher.md    <- Enricher: STRIDE + OWASP + CAs de seguridad
+│   │   │   ├── hu-integration-enricher.md <- Enricher: contratos API + resiliencia
+│   │   │   ├── hu-data-enricher.md        <- Enricher: modelo de datos + consistencia
+│   │   │   ├── hu-split-advisor.md        <- Enricher: propuesta de división de HUs grandes
+│   │   │   ├── report-builder.md          <- Inyecta data en template HTML
+│   │   │   ├── client-report-generator.md <- Informe al cliente
+│   │   │   ├── spec-writer.md             <- Specs SDD
+│   │   │   └── _legacy/                   <- Reemplazados, no usados en flujo principal
+│   │   │       └── hu-analyzer.md, gherkin-writer.md, etc.
+│   │   └── _kit-base/                     <- 101 agentes del JM Kit (READ-ONLY, fuente de inspiración)
+│   ├── rules/
+│   │   ├── _project/                      <- Reglas propias del Requirement Refinator
+│   │   └── _kit-base/                     <- R-001 a R-008 + GEMINI.md (READ-ONLY)
+│   ├── skills/
+│   │   ├── _project/                      <- Skills propios del proyecto
+│   │   │   ├── refinar-sprint/SKILL.md
+│   │   │   ├── refinar-hu/SKILL.md
+│   │   │   ├── iterar-refinamiento/SKILL.md
+│   │   │   ├── generar-informe/SKILL.md
+│   │   │   └── generar-specs/SKILL.md
+│   │   └── _kit-base/                     <- 110 skills genericos (READ-ONLY)
+│   └── workflows/
+│       └── _kit-base/                     <- 101 workflows genericos (READ-ONLY)
 ├── docs/
 │   ├── HUs/
-│   │   └── Sprint-1/                  <- HUs del Sprint (agregar aqui)
+│   │   └── Sprint-X/                      <- HUs del Sprint (el PM crea esta carpeta)
 │   ├── contexto/
-│   │   ├── contexto-funcional.md      <- Contexto de negocio
-│   │   └── contexto-tecnico.md        <- Stack, arquitectura
-│   └── ux_design_playbook_sofka.md    <- Sistema de diseno (fuente de verdad)
+│   │   ├── contexto-funcional.template.md <- Plantilla de contexto de negocio
+│   │   └── contexto-tecnico.template.md   <- Plantilla de stack y arquitectura
+│   └── referencia/                        <- Documentacion de normas y guias
+│       ├── TUTORIAL.md
+│       ├── ui-design-guidelines.md
+│       └── ISO_IEC_25010_Calidad.md, etc.
 ├── output/
-│   └── Sprint-X/                      <- Generado automaticamente
-│       ├── index.html                 <- Dashboard UNICO (todo incluido)
-│       └── data.json                  <- Datos del sprint (JSON)
-├── specs/
-│   └── Sprint-X/                      <- Specs SDD
+│   └── Sprint-X/                          <- Generado automaticamente
+│       ├── index.html                     <- Dashboard UNICO (todo incluido)
+│       └── data.json                      <- Datos del sprint (JSON)
+├── scripts/                               <- Utilitarios Node.js (no son el flujo principal)
+│   ├── approve_specs.js
+│   ├── generador_informes.js
+│   ├── generador_specs.js
+│   └── inyectar_feedback.js
 └── templates/
-    ├── sprint-dashboard.html          <- Template HTML fijo (CSS+JS incluidos)
-    ├── hu-calidad.schema.json         <- Contrato de output JSON
-    ├── refined_user_story_template.md
-    ├── risk_dependency_template.md
-    ├── technical_task_template.md
-    └── spec-sdd-template.md
+    ├── core/                              <- CRITICOS — el orquestador los lee
+    │   ├── sprint-dashboard.html          <- Template HTML fijo (CSS+JS incluidos)
+    │   └── hu-calidad.schema.json         <- Contrato de output JSON
+    └── auxiliary/                         <- Templates de referencia (poco usados)
+        ├── refined_user_story_template.md
+        ├── risk_dependency_template.md
+        └── spec-sdd-template.md
 ```
 
 ---
@@ -192,7 +237,7 @@ Requirement Refinator V1/
 4. **Gherkin en espanol de negocio** -- Sin rutas de API ni IDs tecnicos.
 5. **Estimaciones justificadas** -- Cada tarea incluye justificacion de tiempo.
 6. **Preguntas, no suposiciones** -- Cuando falte info critica, generar preguntas de clarificacion.
-7. **1 agente por HU, todos en paralelo** -- hu-full-analyzer hace todo. No 5 agentes separados.
+7. **1 agente por HU, todos en paralelo** -- hu-full-analyzer hace todo. No 5 agentes separados. Los enrichers son segunda pasada selectiva, no reemplazo.
 8. **Output por sprint** -- Cada sprint en `output/Sprint-X/`. No sobreescribir sprints anteriores.
 9. **HUs aprobadas son inmutables** -- En modo iteracion, no tocar las aprobadas.
 10. **Sin spec APROBADO -> sin implementacion** -- Regla cardinal del SDD.
@@ -260,4 +305,4 @@ El template HTML usa el sistema de diseño definido en `docs/ui-design-guideline
 - **Fuentes:** Clash Grotesk (headings) + Inter (body) + JetBrains Mono (código)
 - **Semánticos (RAG):** Verde `#16A34A` / Ámbar `#D97706` / Rojo `#DC2626`
 
-Todo esto está definido UNA SOLA VEZ en `templates/sprint-dashboard.html`. Los agentes nunca generan CSS.
+Todo esto está definido UNA SOLA VEZ en `templates/core/sprint-dashboard.html`. Los agentes nunca generan CSS.
