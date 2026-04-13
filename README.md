@@ -213,4 +213,4 @@ requirement-refinator/
 ## Créditos
 
 Creado por **Mauricio Sepúlveda Henao**
-Con Claude Code, Antigravity, Gemini y NotebookLM · [MetodologIA](https://metodologia.info)
+Con Claude Code, Antigravity, Gemini y NotebookLM

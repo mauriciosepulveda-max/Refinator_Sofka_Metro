@@ -1,13 +1,14 @@
 # ── Outputs generados (no se versiona el contenido de cliente) ──
-output/*/index.html
-output/*/data.json
+output/
 
-# ── Contexto real de proyectos (cada PM pone el suyo) ──
+# ── Contexto real de proyectos (el PM pone el suyo, nunca se versiona) ──
+# Bloquea cualquier .md que no sea README o .template
 docs/contexto/*.md
 !docs/contexto/README.md
+!docs/contexto/*.template.md
 
 # ── HUs reales de proyectos ──
-docs/HUs/*/
+docs/HUs/Sprint-*/
 !docs/HUs/README.md
 
 # ── Sistema operativo ──

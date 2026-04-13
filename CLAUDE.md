@@ -171,18 +171,27 @@ Requirement Refinator V3/
 ├── .claude/
 │   ├── agents/
 │   │   ├── _project/                      <- Agentes PROPIOS del Requirement Refinator
+<<<<<<< HEAD
 │   │   │   ├── orchestrator.md            <- Coordinacion (lee, lanza, consolida, enriquece)
 │   │   │   ├── hu-full-analyzer.md        <- Análisis completo 1 HU -> JSON (primera pasada)
 │   │   │   ├── hu-security-enricher.md    <- Enricher: STRIDE + OWASP + CAs de seguridad
 │   │   │   ├── hu-integration-enricher.md <- Enricher: contratos API + resiliencia
 │   │   │   ├── hu-data-enricher.md        <- Enricher: modelo de datos + consistencia
 │   │   │   ├── hu-split-advisor.md        <- Enricher: propuesta de división de HUs grandes
+=======
+│   │   │   ├── orchestrator.md            <- Coordinacion (lee, lanza, consolida)
+│   │   │   ├── hu-full-analyzer.md        <- Analisis completo 1 HU -> JSON
+>>>>>>> 7b4c1b5beed660ced47e081d5c8c044d2f86de3a
 │   │   │   ├── report-builder.md          <- Inyecta data en template HTML
 │   │   │   ├── client-report-generator.md <- Informe al cliente
 │   │   │   ├── spec-writer.md             <- Specs SDD
 │   │   │   └── _legacy/                   <- Reemplazados, no usados en flujo principal
 │   │   │       └── hu-analyzer.md, gherkin-writer.md, etc.
+<<<<<<< HEAD
 │   │   └── _kit-base/                     <- 101 agentes del JM Kit (READ-ONLY, fuente de inspiración)
+=======
+│   │   └── _kit-base/                     <- 101 agentes del JM Kit (READ-ONLY)
+>>>>>>> 7b4c1b5beed660ced47e081d5c8c044d2f86de3a
 │   ├── rules/
 │   │   ├── _project/                      <- Reglas propias del Requirement Refinator
 │   │   └── _kit-base/                     <- R-001 a R-008 + GEMINI.md (READ-ONLY)

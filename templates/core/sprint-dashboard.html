@@ -2532,7 +2532,11 @@ indica "No documentado — requiere confirmación del equipo".</pre>
 
   // ── Markdown export/import ─────────────────────────────
   function buildStatePayload(){
+<<<<<<< HEAD
     return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm(),unit:loadUnit(),dates:loadDates(),bac_custom_cop:loadCustomBacCOP(),cap:loadCap()};
+=======
+    return{version:STATE_VERSION,sprint_id:SPRINT_ID,exported_at:new Date().toISOString(),proyecto:(D&&D.config&&D.config.proyecto_nombre)||null,hitl:loadState(),evm:loadEvm(),unit:loadUnit(),dates:loadDates(),bac_custom_h:loadCustomBacH()};
+>>>>>>> 7b4c1b5beed660ced47e081d5c8c044d2f86de3a
   }
   function parseStatePayload(mdText){
     const re=/<!--\s*RR-STATE-BEGIN\s*-->[\s\S]*?```json\s*([\s\S]*?)\s*```[\s\S]*?<!--\s*RR-STATE-END\s*-->/;
@@ -2547,9 +2551,13 @@ indica "No documentado — requiere confirmación del equipo".</pre>
     if(payload.evm)localStorage.setItem(EVM_KEY,JSON.stringify(payload.evm));
     if(payload.unit)localStorage.setItem(UNIT_KEY,payload.unit);
     if(payload.dates)localStorage.setItem(DATES_KEY,JSON.stringify(payload.dates));
+<<<<<<< HEAD
     if(payload.bac_custom_cop!=null)localStorage.setItem(BAC_COP_KEY,String(payload.bac_custom_cop));
     else if(payload.bac_custom_h!=null)localStorage.setItem(BAC_KEY,String(payload.bac_custom_h)); // backward compat
     if(payload.cap)localStorage.setItem(CAP_KEY,JSON.stringify(payload.cap));
+=======
+    if(payload.bac_custom_h!=null)localStorage.setItem(BAC_KEY,String(payload.bac_custom_h));
+>>>>>>> 7b4c1b5beed660ced47e081d5c8c044d2f86de3a
     return{ok:true};
   }
   function handleImportFile(file,rerender){
