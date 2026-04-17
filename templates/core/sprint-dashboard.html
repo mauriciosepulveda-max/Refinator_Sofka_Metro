@@ -873,6 +873,7 @@ indica "No documentado — requiere confirmación del equipo".</pre>
 
 <script>
   window.__SPRINT_DATA__ = /*__SPRINT_DATA__*/null;
+  window.__DOCX_OUTPUT__ = /*__DOCX_OUTPUT__*/null;
 </script>
 
 <script>
@@ -1187,6 +1188,19 @@ indica "No documentado — requiere confirmación del equipo".</pre>
       lines.push('');
     });
     downloadWithPicker(SPRINT_ID+'-historias-refinadas-'+new Date().toISOString().slice(0,10)+'.md',lines.join('\n'),'text/markdown').then(s=>{ if(s) flash('Historias refinadas guardadas en Historico/ ✓'); });
+  }
+  // ── Descarga .docx pre-generado (formato Metro de Medellín) ──
+  async function downloadAllHusDocx(){
+    const b64=window.__DOCX_OUTPUT__;
+    if(!b64){console.warn('.docx no disponible — fallback a .md');downloadAllHusSummary();return;}
+    try{
+      const bin=atob(b64);
+      const buf=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+      const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+      const ok=await downloadWithPicker('MHU-'+SPRINT_ID+'.docx',blob,blob.type);
+      if(ok) flash('Documento .docx descargado \u2713');
+    }catch(e){console.error('Error decodificando .docx:',e);downloadAllHusSummary();}
   }
   function renderRisicarCards(riesgos,riskState,huId){
     if(!(riesgos||[]).length)return'<p style="color:var(--color-text-muted)">Sin riesgos registrados.</p>';
@@ -1593,8 +1607,8 @@ indica "No documentado — requiere confirmación del equipo".</pre>
       const allOk=(D.historias||[]).every(h=>(st2[h.hu_id]||{}).status==='aprobada');
       if(allOk){
         setTimeout(()=>{
-          if(confirm('🎉 ¡Todas las historias han sido aprobadas!\n\n¿Deseas descargar un archivo .md con el resumen refinado de todas las HUs?\n\nIncluye: narrativa, criterios de aceptación, riesgos principales, dependencias y estimación de horas totales (sin desglose de tareas).'))
-            downloadAllHusSummary();
+          if(confirm('🎉 ¡Todas las historias han sido aprobadas!\n\n¿Deseas descargar el documento .docx con el modelamiento de historias de usuario?\n\nFormato: Plantilla Metro de Medellín (Anexo No 3)\nIncluye: portada, control de versiones, introducción, relación HU vs RF, especificación de cada HU con narrativa, criterios de aceptación, riesgos, dependencias y estimación.'))
+            downloadAllHusDocx();
         },350);
       }
     };
@@ -3123,11 +3137,11 @@ indica "No documentado — requiere confirmación del equipo".</pre>
   }
   // ── File System Access API helpers ────────────────────
   async function downloadWithPicker(filename,content,type){
-    const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'});
+    const blob=(content instanceof Blob)?content:new Blob([content],{type:type||'text/plain;charset=utf-8'});
     if(window.showSaveFilePicker){
       try{
         const ext=filename.split('.').pop()||'md';
-        const mimeMap={md:'text/markdown',json:'application/json',html:'text/html'};
+        const mimeMap={md:'text/markdown',json:'application/json',html:'text/html',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'};
         const handle=await window.showSaveFilePicker({
           suggestedName:filename,
           startIn:'documents',

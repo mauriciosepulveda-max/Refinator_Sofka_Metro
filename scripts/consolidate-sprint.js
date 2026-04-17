@@ -167,7 +167,30 @@ function main() {
   const marker = '/*__SPRINT_DATA__*/null';
   if (tmpl.indexOf(marker) === -1) die(`template sin marcador ${marker}`);
   const jsonStr = JSON.stringify(data);
-  const injected = tmpl.replace(marker, () => jsonStr);
+  let injected = tmpl.replace(marker, () => jsonStr);
+
+  // ── Generación .docx via Python (formato Metro de Medellín) ──
+  const docxMarker = '/*__DOCX_OUTPUT__*/null';
+  if (injected.indexOf(docxMarker) !== -1) {
+    const baseTmpl = path.resolve(path.dirname(manifest.template_path), 'metro-hu-base.docx');
+    const docxOut = path.join(manifest.output_dir, 'MHU-' + manifest.sprint_id + '.docx');
+    if (fs.existsSync(baseTmpl)) {
+      try {
+        const scriptPath = path.resolve(__dirname, 'generate-hu-docx.py');
+        execSync(`python3 "${scriptPath}" --data "${dataPath}" --template "${baseTmpl}" --output "${docxOut}"`, { stdio: ['pipe', 'pipe', 'pipe'], timeout: 30000 });
+        const docxB64 = fs.readFileSync(docxOut).toString('base64');
+        injected = injected.replace(docxMarker, () => JSON.stringify(docxB64));
+        console.log(`[RR·CKPT] Fase 4 · docx generado y embebido (${(fs.statSync(docxOut).size / 1024).toFixed(1)} KB)`);
+      } catch (err) {
+        console.log(`[RR·CKPT] Fase 4 · WARN: .docx no generado: ${(err.stderr || err.message || '').toString().trim().slice(0, 200)}`);
+        injected = injected.replace(docxMarker, 'null');
+      }
+    } else {
+      console.log(`[RR·CKPT] Fase 4 · WARN: template ${baseTmpl} no encontrado — .docx no disponible`);
+      injected = injected.replace(docxMarker, 'null');
+    }
+  }
+
   const htmlPath = path.join(manifest.output_dir, 'index.html');
   fs.writeFileSync(htmlPath, injected);
   console.log(`[RR·CKPT] Fase 4 ✓ · index.html generado (${(fs.statSync(htmlPath).size / 1024).toFixed(1)} KB) → ${htmlPath}`);
