@@ -23,7 +23,7 @@ Orquestador del Requirement Refinator. Analiza TODAS las HUs de un sprint y prod
 
 Para reducir la fricción del PM al arrancar un sprint nuevo:
 
-- **`--init`** crea `docs/HUs/<sprint-id>/` vacío y copia `contexto-*.template.md` → `contexto-*.md` si aún no existen. Útil cuando las HUs se van a redactar directamente en el repo.
+- **`--init`** crea `docs/HUs/<sprint-id>/` vacío y copia `contexto-*_template.md` → `contexto-*.md` si aún no existen. Útil cuando las HUs se van a redactar directamente en el repo.
 - **`--ingest <ruta>`** copia todos los archivos `.md` sueltos de `<ruta>` a `docs/HUs/<sprint-id>/`. Si la ruta externa contiene `contexto-funcional.md` / `contexto-tecnico.md` (recursivo), los importa también. Valida que cada HU tenga narrativa + criterios de aceptación mínimos.
 
 Ambos modos delegan la lógica a `scripts/init-sprint.sh`. Al terminar, emiten el siguiente paso sugerido. NO corren el análisis — el PM ejecuta `/refinar-sprint <sprint-id>` después.
@@ -60,7 +60,7 @@ Tabla de errores (abortar, NO seguir, NO preguntar):
 | Falta | Mensaje al PM |
 |---|---|
 | 0 HUs en el sprint | `[RR·CKPT] PRE ✗ · No hay HUs en docs/HUs/<sprint-id>/. Sprints disponibles: <lista>` |
-| contexto-funcional.md ausente | `[RR·CKPT] PRE ✗ · Copia docs/contexto/contexto-funcional.template.md a contexto-funcional.md y rellénalo.` |
+| contexto-funcional.md ausente | `[RR·CKPT] PRE ✗ · Copia docs/contexto/contexto-funcional_template.md a contexto-funcional.md y rellénalo.` |
 | contexto-tecnico.md ausente | idem |
 | hu-calidad.schema.json faltante | `[RR·CKPT] PRE ✗ · Template core roto. Reinstala templates/core/hu-calidad.schema.json desde git.` |
 | sprint-dashboard.html sin placeholder | `[RR·CKPT] PRE ✗ · Template HTML corrupto. Restaura templates/core/sprint-dashboard.html desde git.` |

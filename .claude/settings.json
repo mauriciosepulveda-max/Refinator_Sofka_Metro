@@ -13,8 +13,9 @@
     ]
   },
   "_notes": [
-    "Hook Stop intenta detectar turnos del asistente que cierran vacíos.",
-    "Si el runtime no expone transcript al hook, el watchdog simplemente sale 0 (no bloquea).",
-    "La defensa principal anti-tokenburn es la regla [RR·PAUSE] en CLAUDE.md, no este hook."
+    "Hook Stop HARD: lee transcript_path (JSONL) del input del hook y parsea la última entrada assistant.",
+    "Exit 2 si el último turno del asistente tiene 0 tool_use + <10 chars de texto → stderr con instrucción de emitir [RR·PAUSE].",
+    "Exit 0 si (a) stop_hook_active=true, (b) transcript_path ausente/ilegible, (c) el turno es válido.",
+    "Ya no es best-effort: el contrato real de Claude Code es { session_id, transcript_path, hook_event_name, stop_hook_active }."
   ]
 }

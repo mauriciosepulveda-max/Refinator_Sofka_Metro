@@ -1,0 +1,28 @@
+{
+  "fixture_id": "HU-dryrun",
+  "descripcion": "Golden expectations para el output del analyzer ante una HU bien formada. Scores altos, cobertura completa de CAs, tareas coherentes, pocos huecos HITL.",
+  "expectations": [
+    { "rule": "equals", "path": "schema_version", "value": "1.0.0", "severity": "critical" },
+    { "rule": "matches", "path": "hu_id", "value": "^HU-", "severity": "critical" },
+    { "rule": "type", "path": "titulo_mejorado", "value": "string", "severity": "critical" },
+    { "rule": "minLength", "path": "narrativa_original", "value": 50, "severity": "critical" },
+    { "rule": "type", "path": "narrativa_refinada.rol", "value": "string", "severity": "critical" },
+    { "rule": "minLength", "path": "narrativa_refinada.accion", "value": 5, "severity": "critical" },
+    { "rule": "minArrayLength", "path": "criteriosOriginales", "value": 1, "severity": "critical" },
+    { "rule": "minArrayLength", "path": "criteriosAceptacion", "value": 5, "severity": "critical" },
+    { "rule": "each_minLength", "path": "criteriosAceptacion[*].gherkin", "value": 30, "severity": "critical" },
+    { "rule": "minArrayLength", "path": "tareas", "value": 1, "severity": "critical" },
+    { "rule": "each_minLength", "path": "tareas[*].dod", "value": 15, "severity": "critical" },
+    { "rule": "each_pert_coherent", "path": "tareas[*]", "severity": "critical" },
+    { "rule": "each_min", "path": "tareas[*].estimacion_o", "value": 0, "severity": "critical" },
+    { "rule": "between", "path": "invest_score_norm", "min": 0.7, "max": 1, "severity": "critical" },
+    { "rule": "between", "path": "iso29148_score_norm", "min": 0.7, "max": 1, "severity": "critical" },
+    { "rule": "between", "path": "iso25010_score_norm", "min": 0, "max": 1, "severity": "critical" },
+    { "rule": "between", "path": "calificacion_iso", "min": 3.5, "max": 5, "severity": "critical" },
+    { "rule": "in", "path": "calificacion_nivel", "value": ["Buena", "Excelente"], "severity": "critical" },
+    { "rule": "minArrayLength", "path": "riesgos", "value": 5, "severity": "critical" },
+    { "rule": "each_min", "path": "riesgos[*].gravedad", "value": 1, "severity": "critical" },
+    { "rule": "type", "path": "dependencias", "value": "array", "severity": "warning" },
+    { "rule": "type", "path": "preguntas_clarificacion", "value": "array", "severity": "warning" }
+  ]
+}

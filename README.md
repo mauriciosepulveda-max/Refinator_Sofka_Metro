@@ -64,8 +64,8 @@ cd PM-refinador
 Si es tu primer sprint:
 
 ```bash
-cp docs/contexto/contexto-funcional.template.md docs/contexto/contexto-funcional.md
-cp docs/contexto/contexto-tecnico.template.md   docs/contexto/contexto-tecnico.md
+cp docs/contexto/contexto-funcional_template.md docs/contexto/contexto-funcional.md
+cp docs/contexto/contexto-tecnico_template.md   docs/contexto/contexto-tecnico.md
 ```
 
 Edita ambos archivos con la información real de tu proyecto (dominio, stack, integraciones, convenciones).
@@ -256,6 +256,7 @@ En cada paso, `scripts/next-step.js` emite un banner con el comando exacto sigui
 | `scripts/next-step.js <sprint>` | Emite el siguiente paso sugerido al PM según estado | Fin de cada skill |
 | `scripts/checkpoint.js <save\|load\|clear\|list-completed>` | Resumabilidad de ejecuciones largas | Interno de `/refinar-sprint` Modo B |
 | `scripts/worktree-info.js` | Dual-path awareness cuando operas desde worktrees | Interno de `next-step.js` |
+| `scripts/regression-check.js <expectations> <output>` | Regression testing del output del analyzer contra golden fixtures (13 reglas, exit 0/1/2) | Antes de mergear cambios al schema, al agente o al consolidador |
 
 ---
 
@@ -325,7 +326,7 @@ El proyecto adopta el marco **ASDD de Sofka** como cimiento para la generación 
 2. **Arquitectura** — drivers, componentes, diagrama de secuencia (SSD), flowchart, API contracts, modelo de datos, riesgos técnicos
 3. **Calidad** — CAs Gherkin refinados, casos de prueba base, criterios verificables (cobertura, latencia), estrategia de testing
 4. **Diseño & UX** — design system, WCAG AA, responsive
-5. **Restricciones** — librerías permitidas/prohibidas (R-002/R-003/R-007), versiones mínimas, anti-patrones, compliance
+5. **Restricciones** — librerías permitidas/prohibidas, convenciones y herramientas obligatorias, leídas de `docs/contexto/contexto-tecnico.md` secciones 6.1–6.4 del sprint (el framework es agnóstico a tecnologías; no hereda reglas globales)
 
 ### Gate 0 — Validación antes de APROBADO
 
@@ -397,16 +398,13 @@ PM-refinador/
 │   │   ├── spec-writer.md          ← Actualizado con marco ASDD
 │   │   ├── client-report-generator.md
 │   │   ├── report-builder.md
-│   │   ├── _legacy/                ← Agentes anteriores (no usados)
-│   │   └── _kit-base/              ← 101 agentes del JM Kit (READ-ONLY)
+│   │   └── _legacy/                ← Agentes anteriores (no usados)
 │   ├── skills/                     ← Skills (comandos /refinar-*, /generar-*)
 │   │   ├── refinar-sprint/
 │   │   ├── refinar-hu/
 │   │   ├── iterar-refinamiento/
 │   │   ├── generar-informe/
-│   │   ├── generar-specs/          ← Actualizada con pipeline ASDD
-│   │   └── _kit-base/              ← 110 skills genéricos (READ-ONLY)
-│   ├── rules/_kit-base/            ← R-001 a R-008 + GEMINI.md
+│   │   └── generar-specs/          ← Actualizada con pipeline ASDD
 │   └── scripts/watchdog-empty-turn.js
 ├── scripts/                        ← Scripts utilitarios Node/Bash
 │   ├── preflight-check.sh
@@ -421,9 +419,9 @@ PM-refinador/
 │   │   ├── Sprint-X/               ← Tus HUs (gitignored)
 │   │   └── _fixtures/Sprint-dryrun/← HU sintética para --dry-run
 │   ├── contexto/
-│   │   ├── contexto-funcional.template.md
-│   │   └── contexto-tecnico.template.md
-│   └── referencia/                 ← ISO 29148, 25010, INVEST, RISICAR, etc.
+│   │   ├── contexto-funcional_template.md   ← plantilla — copiar a contexto-funcional.md del sprint
+│   │   └── contexto-tecnico_template.md     ← plantilla — copiar a contexto-tecnico.md; la sección 6 define librerías permitidas/prohibidas, convenciones y herramientas obligatorias del sprint. El framework es agnóstico a tecnologías: no hay stack global, cada sprint declara el suyo.
+│   └── referencia/                 ← ISO 29148, 25010, INVEST, RISICAR, política de migración del schema
 ├── templates/
 │   ├── core/
 │   │   ├── sprint-dashboard.html   ← Template único (no modificar)
@@ -495,4 +493,4 @@ Inspirado en JM Agentic Development Kit + ASD-main (ASDD orchestrator pattern).
 
 ## Licencia
 
-Ver [LICENSE](LICENSE) (si aplica).
+Ver archivo `LICENSE` en la raíz del repo si está presente.
