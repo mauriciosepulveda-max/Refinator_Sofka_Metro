@@ -1,0 +1,19 @@
+{
+  "fixture_id": "HU-malformada",
+  "descripcion": "Golden expectations para el output del analyzer ante una HU deliberadamente pobre. El framework debe detectar scores bajos, ambigüedades y generar preguntas HITL (≥3).",
+  "expectations": [
+    { "rule": "equals", "path": "schema_version", "value": "1.0.0", "severity": "critical" },
+    { "rule": "matches", "path": "hu_id", "value": "^HU-", "severity": "critical" },
+    { "rule": "minArrayLength", "path": "tareas", "value": 1, "severity": "critical" },
+    { "rule": "minArrayLength", "path": "criteriosOriginales", "value": 2, "severity": "critical" },
+    { "rule": "minArrayLength", "path": "criteriosAceptacion", "value": 5, "severity": "critical" },
+    { "rule": "each_minLength", "path": "tareas[*].dod", "value": 15, "severity": "critical" },
+    { "rule": "each_pert_coherent", "path": "tareas[*]", "severity": "critical" },
+    { "rule": "between", "path": "invest_score_norm", "min": 0, "max": 0.7, "severity": "critical" },
+    { "rule": "between", "path": "iso29148_score_norm", "min": 0, "max": 0.7, "severity": "critical" },
+    { "rule": "between", "path": "calificacion_iso", "min": 0, "max": 3.4, "severity": "critical" },
+    { "rule": "in", "path": "calificacion_nivel", "value": ["Deficiente", "Aceptable", "Crítica"], "severity": "critical" },
+    { "rule": "minArrayLength", "path": "preguntas_clarificacion", "value": 3, "severity": "critical" },
+    { "rule": "minArrayLength", "path": "ambiguedades", "value": 1, "severity": "warning" }
+  ]
+}

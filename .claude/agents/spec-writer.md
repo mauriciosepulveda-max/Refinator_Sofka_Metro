@@ -122,9 +122,9 @@ Justificación desde el dominio de negocio. Por qué esta funcionalidad existe y
 - **Manual de marca** — conformidad con identidad
 
 ## 5. Restricciones (ASDD Capa 1 · Sección 5)
-- **Librerías prohibidas / permitidas** — alineadas con `R-002` (Firebase), `R-003` (Hostinger), `R-007` (ES Modules, TS)
-- **Versiones mínimas** — stack obligatorio del proyecto
-- **Patrones anti-recomendados** — qué NO hacer (ej. lógica en controladores — regla del contexto técnico)
+- **Librerías prohibidas / permitidas** — leídas desde `docs/contexto/contexto-tecnico.md` del sprint, secciones 6.1 (permitidas) y 6.2 (prohibidas). El framework es agnóstico a tecnologías: no hereda reglas de stack globales.
+- **Versiones mínimas** — stack obligatorio del proyecto (sección 1 y 6.1 del contexto técnico)
+- **Patrones anti-recomendados** — qué NO hacer (ej. lógica en controladores — según sección 7 del contexto técnico)
 - **Compliance** — SARLAFT, OFAC, Habeas Data, GDPR si aplica
 
 ## 6. Lista de Tareas de Implementación (para delegar en Paso 4)
@@ -136,7 +136,7 @@ Agrupada por especialista:
 - **Seguridad** `[ ]` (si aplica)
 
 ## 7. Definition of Done (DoD)
-- [ ] Código revisado y aprobado en PR (R-007 code standards)
+- [ ] Código revisado y aprobado en PR (siguiendo las convenciones de código de `contexto-tecnico.md` sección 6.3)
 - [ ] Tests unitarios ≥ 80% en lógica nueva
 - [ ] Tests de integración pasando
 - [ ] Escenarios Gherkin automatizados
@@ -178,8 +178,8 @@ Antes de marcar un spec como `APROBADO`, validar automáticamente:
 - [x] DoD con al menos 5 checkboxes
 
 **CoE (mínimo — alineación con reglas del kit):**
-- [x] Stack en "Restricciones" consistente con `R-002` / `R-003` / `R-007`
-- [x] Sin referencias a tecnologías bloqueadas (AWS, Azure, Docker, etc. según R-002)
+- [x] Stack en "Restricciones" consistente con `contexto-tecnico.md` secciones 1 (stack) y 6.1 (permitidas)
+- [x] Sin referencias a tecnologías listadas como prohibidas en `contexto-tecnico.md` sección 6.2
 - [x] Sin lógica de negocio en controladores (si aplica a la HU)
 
 Si falla Gate 0 → `estado: EN_REVISION` + lista de fallos al final del spec. No permitir `APROBADO` hasta que Gate 0 pase.
@@ -242,7 +242,7 @@ specs/
 > IF el modelo de datos no incluye `created_at` / `updated_at` THEN agregarlos (convención del proyecto).
 > IF la lista de tareas no tiene items de QA THEN agregar al menos testing unitario y de integración.
 > IF no hay SSD THEN el spec no es válido — regenerar con diagrama.
-> IF "Restricciones" menciona tecnología bloqueada (AWS Lambda, MongoDB Atlas, etc.) THEN Gate 0 falla — sustituir por equivalente permitido (Firebase Functions, Firestore).
+> IF "Restricciones" menciona una tecnología listada en `contexto-tecnico.md` sección 6.2 THEN Gate 0 falla — sustituir por el equivalente declarado en la columna "Alternativa permitida" de esa misma tabla.
 > IF la sección POR QUÉ no traza a `narrativa_completa.beneficio` THEN el análisis técnico está desconectado del negocio.
 
 ---

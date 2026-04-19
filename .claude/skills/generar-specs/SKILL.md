@@ -118,11 +118,11 @@ Antes de actualizar `estado: APROBADO`, ejecutar validación (manual por ahora; 
 - [x] ≥ 3 requisitos funcionales numerados
 - [x] ≥ 2 CAs Gherkin refinados (happy + error)
 - [x] DoD con ≥ 5 checkboxes
-- [x] Sección "Restricciones" cita R-002/R-003/R-007
+- [x] Sección "Restricciones" deriva librerías/herramientas/convenciones de `docs/contexto/contexto-tecnico.md` secciones 6.1–6.4 del sprint (sin inventar stacks ni heredar reglas globales)
 
 **CoE mínima:**
-- [x] Sin tecnología bloqueada (AWS, Azure, Docker, MongoDB Atlas, Vercel Functions, Cloudflare Workers)
-- [x] Stack declarado alineado con el contexto técnico del proyecto
+- [x] Sin referencias a tecnologías listadas como prohibidas en `contexto-tecnico.md` sección 6.2 del sprint
+- [x] Stack declarado alineado con las secciones 1 (stack) y 6.1 (permitidas) del contexto técnico del proyecto
 
 Si falla cualquiera → `estado: EN_REVISION` + notas al final del spec listando los fallos específicos.
 

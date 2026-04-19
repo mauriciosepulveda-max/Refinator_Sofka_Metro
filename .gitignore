@@ -12,15 +12,15 @@ output/
 specs/
 
 # ── Contexto real de proyectos (el PM pone el suyo, nunca se versiona) ──
-# Solo README y templates quedan en git. El resto es del cliente.
+# Solo README y templates (*_template.md) quedan en git. El resto es del cliente.
 docs/contexto/*.md
 !docs/contexto/README.md
-!docs/contexto/*.template.md
+!docs/contexto/*_template.md
 
-# ── HUs reales de proyectos (una carpeta por sprint real) ──
-# Solo el README y los _fixtures (sintéticos) se versionan.
-docs/HUs/Sprint-*/
-!docs/HUs/README.md
+# ── HUs reales de proyectos (carpeta por sprint/requerimiento real) ──
+# Agnóstico al naming del cliente: Sprint-X, RQ-NNN, HU-NNN, etc. todo queda fuera.
+# Solo el README y los _fixtures (sintéticos del framework) se versionan.
+docs/HUs/*/
 !docs/HUs/_fixtures/
 
 # ── Git worktrees locales (NO son parte del proyecto; solo estado de desarrollo) ──
