@@ -62,11 +62,11 @@ init_sprint() {
   # Copiar templates de contexto si el archivo real no existe
   for n in contexto-funcional contexto-tecnico; do
     if [ ! -f "docs/contexto/$n.md" ]; then
-      if [ -f "docs/contexto/$n_template.md" ]; then
-        cp "docs/contexto/$n_template.md" "docs/contexto/$n.md"
+      if [ -f "docs/contexto/${n}_template.md" ]; then
+        cp "docs/contexto/${n}_template.md" "docs/contexto/$n.md"
         echo "✓ Creado docs/contexto/$n.md (desde template)"
       else
-        echo "⚠ No encontré docs/contexto/$n_template.md — crea docs/contexto/$n.md manualmente"
+        echo "⚠ No encontré docs/contexto/${n}_template.md — crea docs/contexto/$n.md manualmente"
       fi
     fi
   done
