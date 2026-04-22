@@ -62,7 +62,7 @@ Si hay duda, considera: *"¿un output válido bajo vX.0.0 seguirá pasando la va
 2. Bump `schemaVersion` → `1.0.0` → `1.0.1`.
 3. Añadir entrada al `changelog` con fecha y resumen.
 4. Correr `node -e "JSON.parse(...)"` para confirmar JSON válido.
-5. Correr `bash scripts/preflight-check.sh`.
+5. Correr `node scripts/preflight-check.js`.
 
 ### MINOR
 Lo anterior, más:
@@ -113,7 +113,7 @@ Ver [`docs/HUs/_fixtures/README.md`](../HUs/_fixtures/README.md) para el contrat
 - [ ] `changelog` actualizado con fecha (ISO 8601) y resumen del cambio.
 - [ ] Si es MAJOR: nota `## BREAKING` con guía de migración.
 - [ ] `node -e "JSON.parse(require('fs').readFileSync('templates/core/hu-calidad.schema.json','utf8'))"` pasa.
-- [ ] `bash scripts/preflight-check.sh` pasa 4/4.
+- [ ] `node scripts/preflight-check.js` pasa 4/4.
 - [ ] Si afecta al output del agente: `.claude/agents/hu-full-analyzer.md` actualizado.
 - [ ] Si afecta al consolidador: `scripts/consolidate-sprint.js` actualizado y tests manuales OK.
 - [ ] Si afecta al dashboard: `templates/core/sprint-dashboard.html` actualizado y probado abriendo el HTML generado.
