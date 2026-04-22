@@ -77,7 +77,7 @@ Si el asistente detecta que ya publicó un anuncio sin tool call en un turno pre
 1. Reconocerlo explícitamente ("El turno anterior anuncié sin ejecutar"), y
 2. Emitir el tool call pendiente o un `[RR·PAUSE]` con la causa real.
 
-**Esta regla se refuerza con** `scripts/preflight-check.sh` (chequeos automáticos) y los quality gates G3.1/G3.2 de `scripts/consolidate-sprint.js` (validación post-write del HTML).
+**Esta regla se refuerza con** `scripts/preflight-check.js` (chequeos automáticos) y los quality gates G3.1/G3.2 de `scripts/consolidate-sprint.js` (validación post-write del HTML).
 
 ---
 
@@ -267,7 +267,7 @@ Exit 0 = todas las assertions `critical` pasan. Catálogo completo de las 13 reg
 
 ## Checklist post-refactor (verificación rápida)
 
-Si algo no funciona tras mover archivos, corre **`bash scripts/preflight-check.sh`**. Ejecuta 4 chequeos automáticos:
+Si algo no funciona tras mover archivos, corre **`node scripts/preflight-check.js`**. Ejecuta 4 chequeos automáticos:
 
 1. No hay merge markers sin resolver en `CLAUDE.md`, `templates/core/`, `.claude/agents/`, `.claude/skills/`.
 2. Las 5 skills del proyecto están registradas en `.claude/skills/<name>/SKILL.md`.
