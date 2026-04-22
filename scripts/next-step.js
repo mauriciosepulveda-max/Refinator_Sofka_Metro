@@ -27,16 +27,28 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 
 function worktreeInfoBlock(relPath) {
-  // Best-effort — si el script no está o falla, no imprimir nada
+  // Best-effort — si el script no está o falla, reportar pero no imprimir el banner.
   try {
-    const args = ['node', 'scripts/worktree-info.js'];
+    const args = ['scripts/worktree-info.js'];
     if (relPath) { args.push('--relative-path', relPath); }
-    const out = execSync(args.join(' '), { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    return out.trimEnd();
-  } catch (_) { return ''; }
+    const r = spawnSync(process.execPath, args, {
+      shell: false,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    if (r.status !== 0) {
+      const err = (r.stderr || '').toString().trim().slice(0, 200);
+      if (err) console.error(`[worktree-info] status ${r.status}: ${err}`);
+      return '';
+    }
+    return (r.stdout || '').trimEnd();
+  } catch (e) {
+    console.error(`[worktree-info] excepción: ${e.message}`);
+    return '';
+  }
 }
 
 function banner(lines) {

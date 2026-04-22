@@ -47,9 +47,21 @@ function parseArgs(argv) {
   let phase = null, data = {};
   if (cmd === 'save') {
     phase = rest[0];
-    for (const a of rest.slice(1)) {
+    // Acepta `--data=<json>` (legacy, shell-compatible) y `--data <json>`
+    // (nuevo, vía spawnSync con args separados). Mantener retrocompat porque
+    // flujos manuales/externos pueden seguir usando la forma con `=`.
+    const tail = rest.slice(1);
+    for (let i = 0; i < tail.length; i++) {
+      const a = tail[i];
+      let raw = null;
       if (a.startsWith('--data=')) {
-        try { data = JSON.parse(a.slice('--data='.length)); }
+        raw = a.slice('--data='.length);
+      } else if (a === '--data' && i + 1 < tail.length) {
+        raw = tail[i + 1];
+        i++;
+      }
+      if (raw !== null) {
+        try { data = JSON.parse(raw); }
         catch (e) { console.error('--data no es JSON válido: ' + e.message); process.exit(1); }
       }
     }
