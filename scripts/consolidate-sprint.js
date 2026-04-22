@@ -28,20 +28,46 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 
 function die(msg, code) { console.error('✗ ' + msg); process.exit(code || 1); }
 
+// Helper: invoca scripts Node hijo sin pasar por shell.
+// Evita el bug de portabilidad en Windows donde execSync + escape POSIX
+// ('\'') corrompe payloads JSON silenciosamente (cmd.exe no interpreta ese
+// escape). Usar array de args + shell:false es idempotente en todas las
+// plataformas.
+function runNode(scriptArgs, opts) {
+  return spawnSync(process.execPath, scriptArgs, {
+    shell: false,
+    ...(opts || {}),
+  });
+}
+
 function checkpointSave(sprintId, phase, data) {
-  // Best-effort — si checkpoint.js falla no bloqueamos el flujo.
+  // Best-effort — si checkpoint.js falla, lo reportamos pero no bloqueamos.
   try {
-    const dataArg = data ? ` --data='${JSON.stringify(data).replace(/'/g, "'\\''")}'` : '';
-    execSync(`node scripts/checkpoint.js save ${sprintId} ${phase}${dataArg}`, { stdio: 'ignore' });
-  } catch (_) { /* silent */ }
+    const args = ['scripts/checkpoint.js', 'save', sprintId, phase];
+    if (data) { args.push('--data', JSON.stringify(data)); }
+    const r = runNode(args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    if (r.status !== 0) {
+      const err = (r.stderr || '').toString().trim().slice(0, 200);
+      console.error(`[checkpoint] save falló (status ${r.status})${err ? ': ' + err : ''}`);
+    }
+  } catch (e) {
+    console.error(`[checkpoint] save excepción: ${e.message}`);
+  }
 }
 function checkpointClear(sprintId) {
-  try { execSync(`node scripts/checkpoint.js clear ${sprintId}`, { stdio: 'ignore' }); }
-  catch (_) { /* silent */ }
+  try {
+    const r = runNode(['scripts/checkpoint.js', 'clear', sprintId], { stdio: ['ignore', 'ignore', 'pipe'] });
+    if (r.status !== 0) {
+      const err = (r.stderr || '').toString().trim().slice(0, 200);
+      console.error(`[checkpoint] clear falló (status ${r.status})${err ? ': ' + err : ''}`);
+    }
+  } catch (e) {
+    console.error(`[checkpoint] clear excepción: ${e.message}`);
+  }
 }
 
 function extractHuJson(filePath) {
@@ -248,8 +274,13 @@ function main() {
 
   // Emitir siguiente paso sugerido al PM (U2 de Ola 2)
   try {
-    execSync(`node scripts/next-step.js ${manifest.sprint_id}`, { stdio: 'inherit' });
-  } catch (_) { /* next-step es informativo, no bloqueamos si falla */ }
+    const r = runNode(['scripts/next-step.js', manifest.sprint_id], { stdio: 'inherit' });
+    if (r.status !== 0) {
+      console.error(`[next-step] terminó con status ${r.status} — es informativo, no bloqueamos`);
+    }
+  } catch (e) {
+    console.error(`[next-step] excepción (no bloqueante): ${e.message}`);
+  }
 }
 
 main();
